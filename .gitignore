@@ -1,0 +1,12 @@
+# ignore output folders
+.idea/
+out/
+target/
+logs/
+
+# ignore files
+*.iml
+config.json
+.DS_Store
+data
+rx.mv.db
