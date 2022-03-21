@@ -1,7 +1,7 @@
 package com;
 
 import com.cowell.service.biz.Doctor;
-import com.cowell.service.biz.NonKeepalive;
+import com.cowell.service.keepalive.NonKeepalive;
 import com.cowell.service.biz.Patient;
 import com.cowell.core.*;
 import com.cowell.service.queue.MemoryQueue;

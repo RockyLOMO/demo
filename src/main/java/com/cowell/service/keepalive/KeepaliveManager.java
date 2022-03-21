@@ -1,5 +1,6 @@
-package com.cowell.service.biz;
+package com.cowell.service.keepalive;
 
+import com.cowell.config.Constants;
 import com.cowell.service.Holder;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -19,7 +20,7 @@ public class KeepaliveManager {
                 return;
             }
             if (maxMissDuration == null) {
-                maxMissDuration = Holder.DEFAULT_MISS_DURATION;
+                maxMissDuration = Constants.DEFAULT_MISS_DURATION;
             }
             INSTANCE.receiveAck(id, maxMissDuration);
         }

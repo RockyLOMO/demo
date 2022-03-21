@@ -1,4 +1,4 @@
-package com.cowell.service.biz;
+package com.cowell.service.keepalive;
 
 //todo
 //client ws -> server

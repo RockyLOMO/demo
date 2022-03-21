@@ -1,0 +1,18 @@
+app:
+  nameserver:
+    - ns.f-li.cn:853
+  processor:
+    - queue:
+        - name: 华山医院皮肤科
+        - capacity: 1000000
+        - kind: MEMORY
+      dispatcher:
+        store: MEMORY
+        selector: DEFAULT
+#    - queue:
+#        - name: 华山医院（总院+分院）皮肤科
+#        - capacity: 1000000
+#        - kind: SHARDING_H2
+#      dispatcher:
+#        store: SHARDING_H2
+#        selector: DEFAULT

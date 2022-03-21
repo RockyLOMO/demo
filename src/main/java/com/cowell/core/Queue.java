@@ -5,6 +5,8 @@ public interface Queue<T extends QueueElement> {
 
     String getName();
 
+    void setName(String name);
+
     int getCapacity();
 
     int getOffset(T element);
