@@ -1,4 +1,4 @@
-package com.cowell.biz;
+package com.cowell.service.biz;
 
 import com.cowell.core.DiscardReason;
 import com.cowell.core.QueueElement;

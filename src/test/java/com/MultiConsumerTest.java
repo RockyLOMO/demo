@@ -1,7 +1,7 @@
 package com;
 
-import com.cowell.biz.Doctor;
-import com.cowell.biz.Patient;
+import com.cowell.service.biz.Doctor;
+import com.cowell.service.biz.Patient;
 import com.cowell.core.DefaultDispatcher;
 import com.cowell.core.Processor;
 import com.cowell.core.SelectStrategy;

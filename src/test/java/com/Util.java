@@ -1,7 +1,7 @@
 package com;
 
-import com.cowell.biz.Doctor;
-import com.cowell.biz.Patient;
+import com.cowell.service.biz.Doctor;
+import com.cowell.service.biz.Patient;
 import com.cowell.core.*;
 import com.cowell.service.queue.MemoryQueue;
 import org.rx.core.Arrays;
@@ -18,17 +18,22 @@ public class Util {
         queue.setMaxCheckValidMillis(10 * 1000);
 
         String[] prefix = {"赵", "钱", "孙", "李"};
-        for (String p : prefix) {
+        for (int i = 0; i < prefix.length; i++) {
             Doctor doctor = new Doctor();
-            doctor.setName(p + "医生");
+            doctor.setName(prefix[i] + "医生");
             doctor.setValid(true);
             doctor.setAcceptable(true);
-            doctor.getTags().addAll(Arrays.toList(tags[0], tags[2]));
+            switch (i) {
+                case 3:
+                    doctor.getTags().addAll(Arrays.toList(tags[0], tags[2]));
+                    break;
+            }
             doctors.add(doctor);
         }
     }
 
     static void offerPatients(Queue<Patient> queue) {
+        long passTime = 10 * 500;
         for (int i = 0; i < 50; i++) {
             Patient patient = new Patient();
             patient.setId(i + 1);
@@ -42,9 +47,10 @@ public class Util {
 //                    patient.setValid(true);
 //                }, passTime + 5000);
                     break;
-//                case 15:
-//
-//                    break;
+                case 15:
+                    patient.setValid(true);
+                    patient.getTags().add(tags[2]);
+                    break;
                 default:
                     patient.setValid(true);
                     break;

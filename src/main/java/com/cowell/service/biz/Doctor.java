@@ -1,4 +1,4 @@
-package com.cowell.biz;
+package com.cowell.service.biz;
 
 import com.cowell.core.AbstractConsumer;
 import com.cowell.core.Tag;
@@ -23,7 +23,7 @@ public class Doctor extends AbstractConsumer<Patient> {
 
     @Override
     public int matchTags(List<Tag> tags) {
-        return NQuery.of(tags).intersection(tags).count();
+        return NQuery.of(this.tags).intersection(tags).count();
     }
 
     @Override
