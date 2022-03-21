@@ -17,8 +17,9 @@ import static org.rx.core.Extends.sleep;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Doctor extends AbstractConsumer<Patient> {
+    long id;
     String name;
-    boolean valid;
+    final Keepalive keepalive;
     final List<Tag> tags = new ArrayList<>();
 
     @Override
@@ -27,8 +28,13 @@ public class Doctor extends AbstractConsumer<Patient> {
     }
 
     @Override
+    public boolean isValid() {
+        return keepalive.isValid();
+    }
+
+    @Override
     public boolean accept(Patient element) {
-        return syncInvoke(() -> valid && acceptable);
+        return syncInvoke(() -> keepalive.isValid() && acceptable);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com;
 
 import com.cowell.service.biz.Doctor;
+import com.cowell.service.biz.NonKeepalive;
 import com.cowell.service.biz.Patient;
 import com.cowell.core.*;
 import com.cowell.service.queue.MemoryQueue;
@@ -19,9 +20,10 @@ public class Util {
 
         String[] prefix = {"赵", "钱", "孙", "李"};
         for (int i = 0; i < prefix.length; i++) {
-            Doctor doctor = new Doctor();
+            Doctor doctor = new Doctor(new NonKeepalive());
+            doctor.setId(i + 1);
             doctor.setName(prefix[i] + "医生");
-            doctor.setValid(true);
+            doctor.getKeepalive().sendAck();
             doctor.setAcceptable(true);
             switch (i) {
                 case 3:
@@ -33,14 +35,14 @@ public class Util {
     }
 
     static void offerPatients(Queue<Patient> queue) {
-        long passTime = 10 * 500;
+        long passTime = 10 * 2000;
         for (int i = 0; i < 50; i++) {
-            Patient patient = new Patient();
-            patient.setId(i + 1);
+            Patient patient = new Patient(new NonKeepalive());
+            patient.setId(i + 10);
             patient.setName("患者" + patient.getId());
             switch (i) {
                 case 10:
-                    patient.setValid(false);
+//                    patient.getKeepalive().setValid(false);
 //                log.info("check revalid {}", patient);
 //                Tasks.setTimeout(() -> {
 //                    log.info("revalid {}", patient);
@@ -48,11 +50,11 @@ public class Util {
 //                }, passTime + 5000);
                     break;
                 case 15:
-                    patient.setValid(true);
+                    patient.getKeepalive().sendAck();
                     patient.getTags().add(tags[2]);
                     break;
                 default:
-                    patient.setValid(true);
+                    patient.getKeepalive().sendAck();
                     break;
             }
             queue.offer(patient);

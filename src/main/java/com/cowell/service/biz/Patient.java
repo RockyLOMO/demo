@@ -14,9 +14,13 @@ import java.util.List;
 public class Patient implements QueueElement {
     long id;
     String name;
-
-    boolean valid;
+    final Keepalive keepalive;
     final List<Tag> tags = new ArrayList<>();
+
+    @Override
+    public boolean isValid() {
+        return keepalive.isValid();
+    }
 
     @Override
     public List<Tag> preferTags() {

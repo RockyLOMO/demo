@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.rx.core.Constants;
 
 public class MultiConsumerTest {
+    //业务场景 1患者 对 多个医生叫号, Tag匹配优先
     @SneakyThrows
     @Test
     public synchronized void start() {

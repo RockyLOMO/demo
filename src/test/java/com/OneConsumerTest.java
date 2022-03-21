@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.rx.core.Arrays;
 
 public class OneConsumerTest {
+    //业务 1患者 对 1医生
     @SneakyThrows
     @Test
     public synchronized void start() {
