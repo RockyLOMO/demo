@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum SelectStrategy {
-    TAG_FIRST(DefaultSelector.INSTANCE),
+    DEFAULT(DefaultSelector.INSTANCE),
     GRAB_FIRST(GrabFirstSelector.INSTANCE);
 
     final Selector selector;

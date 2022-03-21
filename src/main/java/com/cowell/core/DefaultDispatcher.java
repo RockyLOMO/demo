@@ -3,6 +3,7 @@ package com.cowell.core;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.rx.core.Constants;
 import org.rx.core.FluentWait;
 import org.rx.core.Tasks;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.rx.core.Extends.sleep;
 
+@Slf4j
 @Getter
 @RequiredArgsConstructor
 public class DefaultDispatcher<T extends QueueElement> implements Dispatcher<T>, Consumer<T> {
@@ -67,6 +69,8 @@ public class DefaultDispatcher<T extends QueueElement> implements Dispatcher<T>,
 
     @Override
     public void consume(T element) {
+        long start = System.currentTimeMillis();
         dispatch(element);
+        log.info("dispatcher elapsed: {}ms", System.currentTimeMillis() - start);
     }
 }

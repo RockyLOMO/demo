@@ -5,6 +5,7 @@ import com.cowell.core.Queue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.rx.bean.DateTime;
 import org.rx.core.Constants;
 import org.rx.core.FluentWait;
@@ -20,6 +21,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.rx.core.Extends.eq;
 
+@Slf4j
 @RequiredArgsConstructor
 public class MemoryQueue<T extends QueueElement> extends com.cowell.core.AbstractQueue<T> implements Queue<T> {
     @Getter
@@ -126,7 +128,7 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
                             return false;
                         }, d -> {
                             long nd = d >= 5000L ? 5000L : Math.max(d * 2L, 100L);
-                            System.out.println("nd" + nd);
+                            log.debug("reValid check: {} | {}", nd, sum);
                             if (sum.addAndGet(nd) > maxCheckValidMillis) {
                                 first.onDiscard(DiscardReason.CHECK_VALID_TIMEOUT);
                                 return Constants.TIMEOUT_INFINITE;

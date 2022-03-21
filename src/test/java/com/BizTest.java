@@ -10,15 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.rx.core.Arrays;
 import org.rx.core.Constants;
 
-import static org.rx.core.Extends.sleep;
-
 @Slf4j
 public class BizTest {
     AbstractQueue<Patient> queue = new MemoryQueue<>(Integer.MAX_VALUE);
     Doctor doctor = new Doctor();
     Doctor doctor2 = new Doctor();
     Tag[] tags = new Tag[]{new Tag("1", "主任医生"), new Tag("2", "女医生"), new Tag("3", "10001")};
-    DefaultDispatcher<Patient> dispatcher = new DefaultDispatcher<>(new MemoryStore<>(), SelectStrategy.TAG_FIRST.getSelector());
+    DefaultDispatcher<Patient> dispatcher = new DefaultDispatcher<>(new MemoryStore<>(), SelectStrategy.DEFAULT.getSelector());
 
     public BizTest() {
         queue.setMaxCheckValidMillis(10 * 1000);
