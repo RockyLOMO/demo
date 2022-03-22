@@ -13,7 +13,6 @@ public abstract class AbstractConsumer<T extends QueueElement> implements Consum
     final Lock lock = new ReentrantLock();
     protected boolean acceptable;
 
-    @Override
     public boolean isAcceptable() {
         if (!lock.tryLock()) {
             return false;

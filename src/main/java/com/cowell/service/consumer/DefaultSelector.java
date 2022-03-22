@@ -1,12 +1,13 @@
 package com.cowell.service.consumer;
 
-import com.cowell.core.Consumer;
-import com.cowell.core.ConsumerStore;
-import com.cowell.core.Selector;
-import com.cowell.core.QueueElement;
+import com.cowell.core.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.rx.core.NQuery;
+
+import static com.cowell.config.Constants.ID_TAG_NAME;
+import static org.rx.core.Extends.eq;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -15,13 +16,19 @@ public class DefaultSelector implements Selector {
 
     @Override
     public <T extends QueueElement> Consumer<T> select(ConsumerStore<T> store, T element) {
-        for (Consumer<T> consumer : store.findByTags(element.preferTags())) {
-            log.debug("tag consume: {} -> {}", consumer, element);
-            if (
-//                    consumer.isAcceptable() &&  //不必须等待此医生则放开
-                    consumer.accept(element)) {
+        Tag idTag = NQuery.of(element.getTags()).firstOrDefault(p -> eq(p.getName(), ID_TAG_NAME));
+        Consumer<T> first = null;
+        for (Consumer<T> consumer : store.findByTags(element.getTags())) {
+            log.debug("tag capacity: {} -> {}", consumer, element);
+            if (first == null) {
+                first = consumer;
+            }
+            if (consumer.isValid()) {
                 return consumer;
             }
+        }
+        if (idTag != null) {
+            return first;
         }
         return store.next();
     }

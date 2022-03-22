@@ -24,7 +24,7 @@ public class Patient implements QueueElement {
     }
 
     @Override
-    public List<Tag> preferTags() {
+    public List<Tag> getTags() {
         return tags;
     }
 

@@ -9,14 +9,8 @@ public interface QueueElement extends Serializable {
 
     boolean isValid();
 
-    default List<Tag> preferTags() {
+    default List<Tag> getTags() {
         return Collections.emptyList();
-    }
-
-    default <T extends QueueElement> void onOffer(Queue<T> queue) {
-    }
-
-    default <T extends QueueElement> void onTake(Queue<T> queue) {
     }
 
     default <T extends QueueElement> void onAccept(Consumer<T> consumer) {

@@ -1,9 +1,6 @@
 package com.cowell.service.consumer;
 
-import com.cowell.core.Consumer;
-import com.cowell.core.ConsumerStore;
-import com.cowell.core.QueueElement;
-import com.cowell.core.Tag;
+import com.cowell.core.*;
 import org.rx.io.ShardingEntityDatabase;
 
 import java.util.List;
@@ -11,6 +8,11 @@ import java.util.Set;
 
 public class ShardingH2Store<T extends QueueElement> implements ConsumerStore<T> {
     public static final ShardingEntityDatabase EDB = null;
+
+    @Override
+    public QueueKind getKind() {
+        return null;
+    }
 
     @Override
     public int size() {
@@ -38,7 +40,17 @@ public class ShardingH2Store<T extends QueueElement> implements ConsumerStore<T>
     }
 
     @Override
+    public Set<Tag> getTagCapacities() {
+        return null;
+    }
+
+    @Override
     public Set<Consumer<T>> findByTags(List<Tag> tags) {
+        return null;
+    }
+
+    @Override
+    public Queue<T> getConsumerQueue(long id) {
         return null;
     }
 }

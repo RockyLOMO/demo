@@ -7,6 +7,6 @@ import org.rx.core.Extends;
 @Data
 @AllArgsConstructor
 public class Tag implements Extends {
-    String id;
     String name;
+    String value;
 }

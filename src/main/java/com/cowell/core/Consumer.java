@@ -1,16 +1,17 @@
 package com.cowell.core;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 public interface Consumer<T extends QueueElement> extends Serializable {
+    long getId();
+
     boolean isValid();
 
-    default int matchTags(List<Tag> tags) {
-        return 0;
+    default List<Tag> getTags() {
+        return Collections.emptyList();
     }
-
-    boolean isAcceptable();
 
     boolean accept(T element);
 

@@ -1,5 +1,7 @@
 package com.cowell.core;
 
+import java.util.List;
+
 public interface Queue<T extends QueueElement> {
     QueueKind getKind();
 
@@ -9,11 +11,15 @@ public interface Queue<T extends QueueElement> {
 
     int getCapacity();
 
-    int getOffset(T element);
-
     int size();
 
     boolean offer(T element);
 
     T take();
+
+    List<T> peek(int size);
+
+    T pollById(long id);
+
+    int getOrdinal(T element);
 }

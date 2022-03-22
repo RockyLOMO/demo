@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.rx.bean.DateTime;
-import org.rx.core.Constants;
-import org.rx.core.FluentWait;
-import org.rx.core.Tasks;
-import org.rx.core.TimeoutFlag;
+import org.rx.core.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,21 +30,6 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
     @Override
     public QueueKind getKind() {
         return QueueKind.MEMORY;
-    }
-
-    @Override
-    public int getOffset(T element) {
-        lock.readLock().lock();
-        try {
-            for (int i = 0; i < queue.size(); i++) {
-                if (eq(queue.get(i), element)) {
-                    return i;
-                }
-            }
-            return -1;
-        } finally {
-            lock.readLock().unlock();
-        }
     }
 
     @Override
@@ -82,7 +64,6 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
             } else {
                 queue.add(element);
             }
-            Tasks.run(() -> element.onOffer(this));
             return true;
         } finally {
             lock.writeLock().unlock();
@@ -101,8 +82,6 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
                 queue.wait();
             }
         }
-        T finalElm = elm;
-        Tasks.run(() -> finalElm.onTake(this));
         return elm;
     }
 
@@ -142,6 +121,47 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
             return first;
         } finally {
             lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public List<T> peek(int size) {
+        lock.readLock().lock();
+        try {
+            return queue.subList(0, Math.min(queue.size(), size));
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public T pollById(long id) {
+        lock.writeLock().lock();
+        try {
+            return NQuery.of(queue).where((p, i) -> {
+                if (p.getId() == id) {
+                    queue.remove(i);
+                    return true;
+                }
+                return false;
+            }).firstOrDefault();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public int getOrdinal(T element) {
+        lock.readLock().lock();
+        try {
+            for (int i = 0; i < queue.size(); i++) {
+                if (eq(queue.get(i), element)) {
+                    return i;
+                }
+            }
+            return -1;
+        } finally {
+            lock.readLock().unlock();
         }
     }
 }
