@@ -2,6 +2,7 @@ package com.cowell.core;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.rx.core.Disposable;
 import org.rx.util.function.Action;
 import org.rx.util.function.Func;
 
@@ -9,25 +10,25 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @RequiredArgsConstructor
-public abstract class AbstractConsumer<T extends QueueElement> implements Consumer<T> {
+public abstract class AbstractConsumer<T extends QueueElement> extends Disposable implements Consumer<T> {
     final Lock lock = new ReentrantLock();
-    protected boolean acceptable;
+    private boolean busy;
 
-    public boolean isAcceptable() {
+    public boolean isBusy() {
         if (!lock.tryLock()) {
-            return false;
+            return true;
         }
         try {
-            return acceptable;
+            return busy;
         } finally {
             lock.unlock();
         }
     }
 
-    public void setAcceptable(boolean acceptable) {
+    protected void setBusy(boolean busy) {
         lock.lock();
         try {
-            this.acceptable = acceptable;
+            this.busy = busy;
         } finally {
             lock.unlock();
         }

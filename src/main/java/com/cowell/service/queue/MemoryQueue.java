@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.rx.bean.DateTime;
 import org.rx.core.*;
 
 import java.util.*;
@@ -24,7 +23,7 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
     @Getter
     final int capacity;
     final List<T> queue = new ArrayList<>();
-    final Map<T, ElementContext> map = new ConcurrentHashMap<>();
+    final Set<T> map = ConcurrentHashMap.newKeySet();
     final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     @Override
@@ -48,7 +47,7 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
     }
 
     public boolean offer(T element, boolean putFirst) {
-        if (map.containsKey(element)) {
+        if (map.contains(element)) {
             return false;
         }
 
@@ -58,13 +57,13 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
                 return false;
             }
 
-            map.computeIfAbsent(element, k -> new ElementContext()).setOfferTime(DateTime.now());
+            map.add(element);
             if (putFirst) {
                 queue.add(0, element);
             } else {
                 queue.add(element);
             }
-            return true;
+            return super.offer(element);
         } finally {
             lock.writeLock().unlock();
             synchronized (queue) {
@@ -86,42 +85,47 @@ public class MemoryQueue<T extends QueueElement> extends com.cowell.core.Abstrac
     }
 
     T poll() {
+        T first;
         lock.writeLock().lock();
         try {
             if (queue.isEmpty()) {
                 return null;
             }
-            T first = queue.remove(0);
+            first = queue.remove(0);
             if (first != null) {
                 map.remove(first);
-                if (!first.isValid()) {
-                    try {
-                        FluentWait.newInstance(maxWaitInvalidMillis).until(s -> first.isValid());
-                    } catch (TimeoutException e) {
-                        AtomicLong sum = new AtomicLong();
-                        Tasks.timer().setTimeout(() -> {
-                            if (!first.isValid()) {
-                                return true;
-                            }
-                            offer(first, putFirstOnReValid);
-                            return false;
-                        }, d -> {
-                            long nd = d >= 5000L ? 5000L : Math.max(d * 2L, 100L);
-                            log.debug("reValid check: {} | {}", nd, sum);
-                            if (sum.addAndGet(nd) > maxCheckValidMillis) {
-                                first.onDiscard(DiscardReason.CHECK_VALID_TIMEOUT);
-                                return Constants.TIMEOUT_INFINITE;
-                            }
-                            return nd;
-                        }, first, TimeoutFlag.PERIOD);
-                        return poll();
-                    }
-                }
             }
-            return first;
         } finally {
             lock.writeLock().unlock();
         }
+
+        if (first == null) {
+            return null;
+        }
+        if (!first.isValid()) {
+            try {
+                FluentWait.newInstance(maxWaitInvalidMillis).until(s -> first.isValid());
+            } catch (TimeoutException e) {
+                AtomicLong sum = new AtomicLong();
+                Tasks.timer().setTimeout(() -> {
+                    if (!first.isValid()) {
+                        return true;
+                    }
+                    offer(first, putFirstOnReValid);
+                    return false;
+                }, d -> {
+                    long nd = d >= 5000L ? 5000L : Math.max(d * 2L, 100L);
+                    log.debug("reValid check: {} | {}", nd, sum);
+                    if (sum.addAndGet(nd) > maxCheckValidMillis) {
+                        first.onDiscard(DiscardReason.CHECK_VALID_TIMEOUT);
+                        return Constants.TIMEOUT_INFINITE;
+                    }
+                    return nd;
+                }, first, TimeoutFlag.PERIOD);
+                return poll();
+            }
+        }
+        return first;
     }
 
     @Override

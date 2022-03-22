@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.rx.core.Extends;
 
 //client ajax ack -> server
+//server feign -> server
 @RequiredArgsConstructor
 public class HttpPassiveKeepalive implements Keepalive, Extends {
     static Keepalive getInstance(long id) {

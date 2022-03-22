@@ -24,7 +24,6 @@ public class Util {
             doctor.setId(i + 1);
             doctor.setName(prefix[i] + "医生");
             doctor.getKeepalive().sendAck();
-            doctor.setAcceptable(true);
             switch (i) {
                 case 3:
                     doctor.getTags().addAll(Arrays.toList(tags[0], tags[2]));

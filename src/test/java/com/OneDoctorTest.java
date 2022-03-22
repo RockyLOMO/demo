@@ -9,19 +9,22 @@ import org.junit.jupiter.api.Test;
 import org.rx.core.Arrays;
 import org.rx.core.NQuery;
 
-public class OneConsumerTest {
+public class OneDoctorTest {
     //业务 1患者 对 1医生
     @SneakyThrows
     @Test
     public synchronized void start() {
-        Dispatcher<Patient> processor = new DefaultDispatcher<>(Util.queue, Util.queue.getKind().newStore(), SelectStrategy.DEFAULT.getSelector());
-        processor.getStore().add(Util.doctors.get(0));
-        Util.offerPatients(processor.getQueue());
+        DefaultDispatcher<Patient> dispatcher = new DefaultDispatcher<>(Util.queue, Util.queue.getKind().newStore(), SelectStrategy.DEFAULT.getSelector());
+        dispatcher.setMaxWaitAcceptMillis(1000);
+        dispatcher.setSwitchAsyncThreshold(2000);
+        dispatcher.setMaxSelectMillis(5000);
+        dispatcher.getStore().add(Util.doctors.get(0));
+        Util.offerPatients(dispatcher.getQueue());
 
         assert NQuery.of(Util.doctors.get(0).getTags()).intersection(Arrays.toList(Util.tags[2])).count() == 0;
         assert NQuery.of(Util.doctors.get(3).getTags()).intersection(Arrays.toList(Util.tags[2])).count() == 1;
 
-        processor.startAsync();
+        dispatcher.startAsync();
         wait();
     }
 }

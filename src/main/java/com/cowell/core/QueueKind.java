@@ -7,7 +7,8 @@ import com.cowell.service.queue.ShardingH2Queue;
 
 public enum QueueKind {
     MEMORY,
-    SHARDING_H2;
+    SHARDING_H2,
+    MYSQL;
 
     public <T extends QueueElement> Queue<T> newQueue(long capacity) {
         switch (this) {

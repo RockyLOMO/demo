@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.rx.core.Extends.sleep;
+import static org.rx.core.Extends.tryClose;
 
 @Slf4j
 @Data
@@ -28,21 +29,28 @@ public class Doctor extends AbstractConsumer<Patient> {
     }
 
     @Override
+    protected void freeObjects() {
+        tryClose(keepalive);
+    }
+
+    //不加锁
+    @Override
     public boolean accept(Patient element) {
-        return syncInvoke(() -> keepalive.isValid() && acceptable);
+        return keepalive.isValid() && !isBusy();
     }
 
     @Override
     public void consume(Patient element) {
+        System.out.println(isBusy());
         syncInvoke(() -> {
-            if (!acceptable) {
+            if (isBusy()) {
                 throw new InvalidException("Not acceptable");
             }
 
-            acceptable = false;
+            setBusy(true);
             log.info("consume {} -> {}", this, element);
             sleep(2000);
-            acceptable = true;
+            setBusy(false);
         });
     }
 }

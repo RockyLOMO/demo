@@ -1,17 +1,17 @@
 package com.cowell.service.consumer;
 
 import com.cowell.core.*;
+import com.cowell.core.Queue;
 import org.rx.bean.RandomList;
 import org.rx.core.NQuery;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MemoryStore<T extends QueueElement> implements ConsumerStore<T> {
     final RandomList<Consumer<T>> list = new RandomList<>();
+    //    final List<Consumer<T>> list = new ArrayList<>();
     final Map<Long, Queue<T>> subQueues = new ConcurrentHashMap<>();
 
     @Override

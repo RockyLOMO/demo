@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.rx.core.NQuery;
 
-import static com.cowell.config.Constants.ID_TAG_NAME;
+import static com.cowell.config.Consts.ID_TAG_NAME;
 import static org.rx.core.Extends.eq;
 
 @Slf4j

@@ -1,9 +1,11 @@
 package com.cowell.core;
 
+import com.cowell.config.Consts;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.rx.core.Constants;
 import org.rx.core.Disposable;
 import org.rx.core.FluentWait;
@@ -25,7 +27,11 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
     @Getter
     final Selector selector;
     @Setter
-    long maxWaitInvalidMillis = 10 * 1000;
+    long maxWaitAcceptMillis = 5 * 1000;
+    @Setter
+    long switchAsyncThreshold = 10 * 1000;
+    @Setter
+    long maxSelectMillis = 60 * 1000;
     CompletableFuture<Void> future;
 
     @Override
@@ -43,31 +49,49 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
                 T elm = queue.take();
                 long start = System.currentTimeMillis();
                 dispatch(elm);
-//                log.info("dispatch elapsed: {}ms", System.currentTimeMillis() - start);
+                log.info("dispatch elapsed: {}ms", System.currentTimeMillis() - start);
             }
         });
     }
 
     @Override
     public void dispatch(T element) {
+        long start = System.currentTimeMillis();
+        element.attr(Consts.ATTR_DISPATCH_START_NAME, start);
+        element.attr(Consts.ATTR_DISPATCH_END_NAME, null);
         Consumer<T> consumer;
         while ((consumer = selector.select(store, element)) != null) {
+            Long endTime = element.attr(Consts.ATTR_DISPATCH_END_NAME);
+            if (endTime != null) {
+                return;
+            }
+            long selectElapsed = System.currentTimeMillis() - start;
+            if (!BooleanUtils.isTrue(element.attr(Consts.ATTR_ASYNC_DISPATCH)) && selectElapsed > switchAsyncThreshold) {
+                element.attr(Consts.ATTR_ASYNC_DISPATCH, true);
+                Tasks.run(() -> {
+                    log.info("async dispatch {}", element);
+                    dispatch(element);
+                });
+                return;
+            }
+            if (selectElapsed > maxSelectMillis) {
+                element.onDiscard(DiscardReason.SELECT_TIMEOUT);
+                return;
+            }
             Consumer<T> finalConsumer = consumer;
             if (!consumer.accept(element)) {
-                if (maxWaitInvalidMillis == Constants.TIMEOUT_INFINITE) {
+                if (maxWaitAcceptMillis == Constants.TIMEOUT_INFINITE) {
                     sleep(0);
                     continue;
                 }
                 try {
-                    FluentWait.newInstance(maxWaitInvalidMillis).until(s -> finalConsumer.accept(element));
+                    FluentWait.newInstance(maxWaitAcceptMillis).until(s -> finalConsumer.accept(element));
                 } catch (TimeoutException e) {
                     continue;
                 }
             }
-            Tasks.run(() -> {
-                finalConsumer.consume(element);
-                element.onConsume(finalConsumer);
-            });
+            element.attr(Consts.ATTR_DISPATCH_END_NAME, System.currentTimeMillis());
+            Tasks.run(() -> finalConsumer.consume(element));
             return;
         }
         element.onDiscard(DiscardReason.CONSUMER_INVALID);
