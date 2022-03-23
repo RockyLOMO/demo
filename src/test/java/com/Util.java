@@ -40,7 +40,7 @@ public class Util {
 
     static void offerPatients(Queue<Patient> queue) {
         long passTime = 10 * 2000;
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 40; i++) {
             Patient patient = new Patient();
             patient.setId(i + 10);
             patient.setName("患者" + patient.getId());

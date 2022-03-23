@@ -19,7 +19,7 @@ import static org.rx.core.Extends.*;
 public class DefaultDispatcher<T extends QueueElement> extends Disposable implements Dispatcher<T>, EventTarget<DefaultDispatcher<T>> {
     @Data
     @EqualsAndHashCode(callSuper = true)
-    static class DiscardEventArgs<T> extends EventArgs {
+    public static class DiscardEventArgs<T> extends EventArgs {
         final T element;
         final DiscardReason reason;
     }
@@ -66,7 +66,6 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
             while (!isClosed()) {
                 quietly(() -> {
                     T elm = queue.take();
-                    DispatchContext.set(this);
                     long start = System.currentTimeMillis();
                     dispatch(elm);
                     log.info("dispatch elapsed: {}ms", System.currentTimeMillis() - start);
@@ -77,6 +76,7 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
 
     @Override
     public void dispatch(T element) {
+        DispatchContext.set(this);
 //        DispatchContext.current().setEntityType(element.getClass());
         Class entityType = element.getClass();
         if (!keepaliveManager.isValid(entityType, element.getId())) {

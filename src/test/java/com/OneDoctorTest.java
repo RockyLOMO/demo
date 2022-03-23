@@ -7,10 +7,12 @@ import com.cowell.service.biz.Patient;
 import com.cowell.service.keepalive.NonKeepaliveManager;
 import com.cowell.service.lock.LocalLock;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.rx.core.Arrays;
 import org.rx.core.NQuery;
 
+@Slf4j
 public class OneDoctorTest {
     //业务 1患者 对 1医生
     @SneakyThrows
@@ -20,6 +22,9 @@ public class OneDoctorTest {
                 new NonKeepaliveManager(),
                 Util.queue, Util.group, SelectStrategy.DEFAULT.getSelector(),
                 new DefaultHandler<>(new LocalLock()));
+        dispatcher.onDiscard.combine((s, e) -> {
+            log.info("Discard {} {}", e.getReason(), e.getElement());
+        });
 //        dispatcher.setMaxAcceptMillis(1000);
 //        dispatcher.setSwitchAsyncThreshold(2000);
 //        dispatcher.setMaxDispatchMillis(5000);
