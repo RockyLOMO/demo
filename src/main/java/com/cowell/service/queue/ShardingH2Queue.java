@@ -47,7 +47,7 @@ public class ShardingH2Queue<T extends QueueElement> implements Queue<T> {
     }
 
     @Override
-    public T pollById(long id) {
+    public T pollById(long elementId) {
         return null;
     }
 

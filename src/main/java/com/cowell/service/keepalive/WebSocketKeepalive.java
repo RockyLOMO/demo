@@ -1,5 +1,6 @@
 package com.cowell.service.keepalive;
 
+import com.cowell.core.KAEntity;
 import com.cowell.core.Keepalive;
 import com.cowell.core.KeepaliveManager;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketKeepalive implements Keepalive {
     final KeepaliveManager manager;
-    final long id;
+    final KAEntity entity;
     final long maxMissDuration;
 
     @Override

@@ -17,6 +17,8 @@ public class DefaultSelector implements Selector {
     @Override
     public <T extends QueueElement> Consumer<T> select(ConsumerGroup<T> store, T element) {
         DispatchContext ctx = DispatchContext.current();
+        Dispatcher<T> dispatcher = ctx.getDispatcher();
+//        ctx.setEntityType(ConsumerEntity.class);
 
         Tag idTag = NQuery.of(element.getPreferTags()).firstOrDefault(p -> eq(p.getName(), ID_TAG_NAME));
         Consumer<T> first = null;
@@ -25,7 +27,7 @@ public class DefaultSelector implements Selector {
             if (first == null) {
                 first = consumer;
             }
-            if (ctx.getDispatcher().getKeepaliveManager().isValid(consumer.getId())) {
+            if (dispatcher.getKeepaliveManager().isValid((Class) consumer.getClass(), consumer.getId())) {
                 return consumer;
             }
         }

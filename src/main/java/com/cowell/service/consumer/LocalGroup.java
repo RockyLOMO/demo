@@ -2,6 +2,7 @@ package com.cowell.service.consumer;
 
 import com.cowell.core.*;
 import com.cowell.core.Queue;
+import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.rx.bean.DateTime;
 import org.rx.core.Constants;
@@ -21,7 +22,9 @@ import static org.rx.core.Extends.*;
 public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
     final String groupId;
     final EntityDatabase db = EntityDatabase.DEFAULT;
-    final Map<Long, Queue<T>> subQueues = new ConcurrentHashMap<>();
+    final Map<Long, Queue<T>> queues = new ConcurrentHashMap<>();
+    @Setter
+    long consumerQueueCapacity = Integer.MAX_VALUE;
 
     @Override
     public QueueKind getKind() {
@@ -71,7 +74,8 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
                 r.setGroupId(groupId);
                 r.setCreateTime(DateTime.now());
             }
-            r.setQueueSize(getConsumerQueue(consumer.getId()).size());
+            queues.get(consumer.getId());
+            r.setQueueSize(getConsumerQueueSize(consumer.getId()));
             r.setContent(consumer);
             db.save(r);
 
@@ -102,12 +106,20 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
 
     @Override
     public Queue<T> getConsumerQueue(long consumerId) {
-        return subQueues.computeIfAbsent(consumerId, k -> getKind().newQueue(getQueueId(consumerId), Integer.MAX_VALUE));
+        return queues.computeIfAbsent(consumerId, k -> getKind().newQueue(getQueueId(consumerId), Math.max(1, consumerQueueCapacity)));
+    }
+
+    long getConsumerQueueSize(long consumerId) {
+        Queue<T> queue = queues.get(consumerId);
+        if (queue == null) {
+            return 0;
+        }
+        return queue.size();
     }
 
     @Override
     public Consumer<T> next() {
-        List<ConsumerEntity<T>> r = db.findBy(query().eq(ConsumerEntity::isValid, true).orderByDescending(ConsumerEntity::getQueueSize).limit(1));
+        List<ConsumerEntity<T>> r = db.findBy(query().ge(ConsumerEntity::getTtl, System.currentTimeMillis()).orderByDescending(ConsumerEntity::getQueueSize).limit(1));
         if (CollectionUtils.isEmpty(r)) {
             return null;
         }
@@ -116,7 +128,7 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
 
     @Override
     public List<Consumer<T>> nextList(int size) {
-        List<ConsumerEntity<T>> r = db.findBy(query().eq(ConsumerEntity::isValid, true).orderByDescending(ConsumerEntity::getQueueSize).limit(size));
+        List<ConsumerEntity<T>> r = db.findBy(query().ge(ConsumerEntity::getTtl, System.currentTimeMillis()).orderByDescending(ConsumerEntity::getQueueSize).limit(size));
         if (CollectionUtils.isEmpty(r)) {
             return Collections.emptyList();
         }

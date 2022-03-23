@@ -12,6 +12,7 @@ import org.rx.bean.DateTime;
 import org.rx.core.*;
 import org.rx.io.EntityDatabase;
 import org.rx.io.EntityQueryLambda;
+import org.rx.io.IOStream;
 
 import java.sql.Connection;
 import java.util.*;
@@ -51,20 +52,28 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
 
     EntityQueryLambda<ElementEntity<T>> query() {
         return (EntityQueryLambda<ElementEntity<T>>) (EntityQueryLambda) new EntityQueryLambda<>(ElementEntity.class)
-                .eq(ElementEntity::getQueueId, queueId);
+                .eq(ElementEntity::getQueueId, queueId)
+                .eq(ElementEntity::getStatus, QueueElementStatus.QUEUED);
+    }
+
+    long computeId(long elementId) {
+        return IOStream.checksum(queueId, String.valueOf(elementId));
     }
 
     T wrap(T elm) {
         return (T) proxy(elm.getClass(), (m, p) -> {
             if (m.getName().startsWith("set")) {
                 Tasks.setTimeout(() -> db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
-                    ElementEntity<T> r = db.findById(ElementEntity.class, elm.getId());
+                    long id = computeId(elm.getId());
+                    ElementEntity<T> r = db.findById(ElementEntity.class, id);
                     if (r == null) {
                         r = new ElementEntity<>();
-                        r.setId(elm.getId());
+                        r.setId(id);
                         r.setQueueId(queueId);
                         r.setCreateTime(DateTime.now());
                     }
+                    log.info("{} status change {} -> {}", elm.getId(), r.getStatus(), elm.getStatus());
+                    r.setStatus(elm.getStatus());
                     r.setContent(elm);
                     db.save(r);
                 }), writeBackDelay, elm, TimeoutFlag.REPLACE);
@@ -76,21 +85,26 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
     @Override
     public boolean offer(@NonNull T element, boolean putFirst) {
         return ifNull(db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
-            if (db.existsById(ElementEntity.class, element.getId()) || size() > capacity) {
+            long id = computeId(element.getId());
+            ElementEntity<T> r = db.findById(ElementEntity.class, id);
+            if ((r != null && !CAN_OFFER_STATUS.contains(r.getStatus())) || size() > capacity) {
                 return false;
             }
 
-            ElementEntity<T> entity = new ElementEntity<>();
-            entity.setId(element.getId());
-            entity.setQueueId(queueId);
-            entity.setContent(element);
-            if (putFirst) {
-                entity.setCreateTime(DateTime.MIN);
-            } else {
-                entity.setCreateTime(DateTime.now());
+            if (r == null) {
+                r = new ElementEntity<>();
+                r.setId(id);
+                r.setQueueId(queueId);
+                if (putFirst) {
+                    r.setCreateTime(DateTime.MIN);
+                } else {
+                    r.setCreateTime(DateTime.now());
+                }
             }
-            element.setStatus(QueueElementStatus.QUEUED);
-            db.save(entity, true);
+            r.setStatus(QueueElementStatus.QUEUED);
+            element.setStatus(r.getStatus());
+            r.setContent(element);
+            db.save(r);
             synchronized (db) {
                 db.notifyAll();
             }
@@ -116,9 +130,11 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
             if (CollectionUtils.isEmpty(rs)) {
                 return null;
             }
-            ElementEntity<T> first = rs.get(0);
-            db.deleteById(ElementEntity.class, first.getId());
-            return first.content;
+            ElementEntity<T> elm = rs.get(0);
+            elm.setStatus(QueueElementStatus.TAKEN);
+            elm.content.setStatus(elm.getStatus());
+//            db.deleteById(ElementEntity.class, first.getId());
+            return elm.content;
         }));
     }
 
@@ -128,13 +144,16 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
     }
 
     @Override
-    public T pollById(long id) {
+    public T pollById(long elementId) {
         return db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
+            long id = computeId(elementId);
             ElementEntity<T> elm = (ElementEntity<T>) db.findById(ElementEntity.class, id);
             if (elm == null) {
                 return null;
             }
-            db.deleteById(ElementEntity.class, id);
+            elm.setStatus(QueueElementStatus.TAKEN);
+            elm.content.setStatus(elm.getStatus());
+//            db.deleteById(ElementEntity.class, elementId);
             return wrap(elm.content);
         });
     }

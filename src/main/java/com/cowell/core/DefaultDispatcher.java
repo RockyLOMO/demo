@@ -7,14 +7,13 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.rx.core.*;
 import org.rx.core.Delegate;
 
-import java.util.Deque;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.rx.core.Extends.*;
 
+@SuppressWarnings(Constants.NON_UNCHECKED)
 @Slf4j
 @RequiredArgsConstructor
 public class DefaultDispatcher<T extends QueueElement> extends Disposable implements Dispatcher<T>, EventTarget<DefaultDispatcher<T>> {
@@ -34,26 +33,29 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
     final ConsumerGroup<T> group;
     @Getter
     final Selector selector;
+    @Getter
+    final ConsumerHandler<T> handler;
 
     @Setter
-    long maxWaitInvalidMillis = 10 * 1000;
+    long maxWaitInvalidMillis = 5 * 1000;
     @Setter
     boolean putFirstOnReValid;
     @Setter
     long maxCheckValidMillis = 5 * 60 * 1000;
 
     @Setter
-    long maxWaitAcceptMillis = 5 * 1000;
+    long switchAsyncThreshold = 5 * 1000;
     @Setter
-    long switchAsyncThreshold = 10 * 1000;
+    long maxAcceptMillis = 5 * 1000;
     @Setter
-    long maxSelectMillis = 60 * 1000;
+    long maxDispatchMillis = 60 * 1000;
     CompletableFuture<Void> future;
 
     @Override
     protected void freeObjects() {
         tryClose(queue);
         tryClose(group);
+        tryClose(handler);
     }
 
     public synchronized CompletableFuture<Void> startAsync() {
@@ -75,13 +77,16 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
 
     @Override
     public void dispatch(T element) {
-        if (!keepaliveManager.isValid(element.getId())) {
+//        DispatchContext.current().setEntityType(element.getClass());
+        Class entityType = element.getClass();
+        if (!keepaliveManager.isValid(entityType, element.getId())) {
             try {
-                FluentWait.newInstance(maxWaitInvalidMillis).until(s -> keepaliveManager.isValid(element.getId()));
+                FluentWait.newInstance(maxWaitInvalidMillis).until(s -> keepaliveManager.isValid(entityType, element.getId()));
             } catch (TimeoutException e) {
                 AtomicLong sum = new AtomicLong();
                 Tasks.timer().setTimeout(() -> {
-                    if (!keepaliveManager.isValid(element.getId())) {
+//                    DispatchContext.set(this).setEntityType(element.getClass());
+                    if (!keepaliveManager.isValid(entityType, element.getId())) {
                         return true;
                     }
                     queue.offer(element, putFirstOnReValid);
@@ -108,8 +113,8 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
             if (endTime != null) {
                 return;
             }
-            long selectElapsed = System.currentTimeMillis() - start;
-            if (!BooleanUtils.isTrue(element.attr(Consts.ATTR_ASYNC_DISPATCH)) && selectElapsed > switchAsyncThreshold) {
+            long elapsed = System.currentTimeMillis() - start;
+            if (!BooleanUtils.isTrue(element.attr(Consts.ATTR_ASYNC_DISPATCH)) && elapsed > switchAsyncThreshold) {
                 element.attr(Consts.ATTR_ASYNC_DISPATCH, true);
                 Tasks.run(() -> {
                     log.info("async dispatch {}", element);
@@ -117,41 +122,26 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
                 });
                 return;
             }
-            if (selectElapsed > maxSelectMillis) {
-                raiseEvent(onDiscard, new DiscardEventArgs<>(element, DiscardReason.SELECT_TIMEOUT));
+            if (elapsed > maxDispatchMillis) {
+                raiseEvent(onDiscard, new DiscardEventArgs<>(element, DiscardReason.DISPATCH_TIMEOUT));
                 return;
             }
+
             Consumer<T> finalConsumer = consumer;
-            if (!consumer.accept(element)) {
-                if (maxWaitAcceptMillis == Constants.TIMEOUT_INFINITE) {
+            if (!handler.accept(consumer, element)) {
+                if (maxAcceptMillis == Constants.TIMEOUT_INFINITE) {
                     sleep(0);
                     continue;
                 }
                 try {
-                    FluentWait.newInstance(maxWaitAcceptMillis).until(s -> finalConsumer.accept(element));
+                    FluentWait.newInstance(maxAcceptMillis).until(s -> handler.accept(finalConsumer, element));
                 } catch (TimeoutException e) {
                     continue;
                 }
             }
             element.attr(Consts.ATTR_DISPATCH_END_NAME, System.currentTimeMillis());
-            Tasks.run(() -> finalConsumer.consume(element));
             return;
         }
-        element.onDiscard(DiscardReason.CONSUMER_INVALID);
-    }
-
-    @Override
-    public boolean accept(Consumer<T> consumer, T element) {
-        return false;
-    }
-
-    @Override
-    public List<T> getAcceptedList(Consumer<T> consumer) {
-        return null;
-    }
-
-    @Override
-    public void consume(Consumer<T> consumer, T element) {
-
+        raiseEvent(onDiscard, new DiscardEventArgs<>(element, DiscardReason.CONSUMER_INVALID));
     }
 }

@@ -12,7 +12,9 @@ public interface ConsumerGroup<T extends QueueElement> {
 
     boolean remove(Consumer<T> consumer);
 
-    Queue<T> getConsumerQueue(long id);
+    void setConsumerQueueCapacity(long capacity);
+
+    Queue<T> getConsumerQueue(long consumerId);
 
     Consumer<T> next();
 

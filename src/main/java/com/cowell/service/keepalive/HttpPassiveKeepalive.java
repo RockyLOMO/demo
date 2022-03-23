@@ -1,5 +1,6 @@
 package com.cowell.service.keepalive;
 
+import com.cowell.core.KAEntity;
 import com.cowell.core.Keepalive;
 import com.cowell.core.KeepaliveManager;
 import lombok.RequiredArgsConstructor;
@@ -9,16 +10,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class HttpPassiveKeepalive implements Keepalive {
     final KeepaliveManager manager;
-    final long id;
+    final KAEntity entity;
     final long maxMissDuration;
 
     @Override
     public synchronized boolean isValid() {
-        return manager.isValid(id);
+        return manager.isValid(entity.getClass(), entity.getId());
     }
 
     public synchronized void passiveAck() {
-        manager.receiveAck(id, maxMissDuration);
+        manager.receiveAck(entity.getClass(), entity.getId(), maxMissDuration);
     }
 
     @Override

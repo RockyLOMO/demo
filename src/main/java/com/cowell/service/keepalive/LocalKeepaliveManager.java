@@ -1,45 +1,55 @@
 package com.cowell.service.keepalive;
 
+import com.cowell.core.KAEntity;
 import com.cowell.core.Keepalive;
 import com.cowell.core.KeepaliveKind;
 import com.cowell.core.KeepaliveManager;
+import io.netty.util.concurrent.FastThreadLocal;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.rx.exception.InvalidException;
 import org.rx.io.EntityDatabase;
 
 import java.sql.Connection;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocalKeepaliveManager implements KeepaliveManager {
+    //    public static final FastThreadLocal<Class> ENTITY_TYPE = new FastThreadLocal<>();
     final EntityDatabase db = EntityDatabase.DEFAULT;
 
-    public boolean isValid(long id) {
-        KAEntity entity = db.findById(KAEntity.class, id);
-        return entity != null && (entity.lastAckTime - System.currentTimeMillis()) <= entity.maxMissDuration;
+//    <T extends KAEntity> Class<T> entityType() {
+//        Class<T> type = ENTITY_TYPE.get();
+//        if (type == null) {
+//            throw new InvalidException("No entity type from context");
+//        }
+//        return type;
+//    }
+
+    public <T extends KAEntity> boolean isValid(Class<T> entityType, long id) {
+        T r = db.findById(entityType, id);
+        return r != null && r.getTtl() >= System.currentTimeMillis();
     }
 
-    public void receiveAck(long id, long maxMissDuration) {
+    public <T extends KAEntity> void receiveAck(Class<T> entityType, long id, long maxMissDuration) {
         db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
-            KAEntity entity = db.findById(KAEntity.class, id);
-            if (entity == null) {
-                entity = new KAEntity();
-                entity.setId(id);
-                entity.setMaxMissDuration(maxMissDuration);
+            T r = db.findById(entityType, id);
+            if (r == null) {
+                return;
             }
-            entity.setLastAckTime(System.currentTimeMillis());
-            db.save(entity);
+            r.setTtl(System.currentTimeMillis() + maxMissDuration);
+            db.save(r);
         });
     }
 
     @Override
-    public Keepalive newKeepalive(KeepaliveKind kind, long id, long maxMissDuration) {
+    public <T extends KAEntity> Keepalive newKeepalive(KeepaliveKind kind, T entity, long maxMissDuration) {
         switch (kind) {
             case TCP:
-                return new TcpKeepalive(this, id, maxMissDuration);
+                return new TcpKeepalive(this, entity, maxMissDuration);
             case WEB_SOCKET:
-                return new WebSocketKeepalive(this, id, maxMissDuration);
+                return new WebSocketKeepalive(this, entity, maxMissDuration);
             default:
-                return new HttpPassiveKeepalive(this, id, maxMissDuration);
+                return new HttpPassiveKeepalive(this, entity, maxMissDuration);
         }
     }
 }

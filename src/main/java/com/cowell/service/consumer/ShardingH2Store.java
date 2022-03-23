@@ -30,7 +30,11 @@ public class ShardingH2Store<T extends QueueElement> implements ConsumerGroup<T>
     }
 
     @Override
-    public Queue<T> getConsumerQueue(long id) {
+    public void setConsumerQueueCapacity(long capacity) {
+    }
+
+    @Override
+    public Queue<T> getConsumerQueue(long consumerId) {
         return null;
     }
 
