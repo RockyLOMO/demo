@@ -2,6 +2,7 @@ package com.cowell.service.consumer;
 
 import com.cowell.core.*;
 import org.rx.io.ShardingEntityDatabase;
+import org.rx.util.function.BiAction;
 
 import java.util.List;
 import java.util.Set;
@@ -27,6 +28,16 @@ public class ShardingH2Store<T extends QueueElement> implements ConsumerGroup<T>
     @Override
     public boolean remove(Consumer<T> consumer) {
         return false;
+    }
+
+    @Override
+    public Consumer<T> getById(long consumerId) {
+        return null;
+    }
+
+    @Override
+    public void setById(long consumerId, BiAction<Consumer<T>> fn) {
+
     }
 
     @Override

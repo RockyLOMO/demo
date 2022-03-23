@@ -5,14 +5,11 @@ import com.cowell.core.Keepalive;
 import com.cowell.core.KeepaliveKind;
 import com.cowell.core.KeepaliveManager;
 import io.netty.util.concurrent.FastThreadLocal;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import org.rx.exception.InvalidException;
 import org.rx.io.EntityDatabase;
 
 import java.sql.Connection;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocalKeepaliveManager implements KeepaliveManager {
     //    public static final FastThreadLocal<Class> ENTITY_TYPE = new FastThreadLocal<>();
     final EntityDatabase db = EntityDatabase.DEFAULT;

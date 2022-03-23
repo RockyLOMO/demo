@@ -8,9 +8,11 @@ import org.rx.bean.DateTime;
 import org.rx.core.Constants;
 import org.rx.core.NQuery;
 import org.rx.core.Strings;
+import org.rx.exception.InvalidException;
 import org.rx.io.EntityDatabase;
 import org.rx.io.EntityQueryLambda;
 import org.rx.io.IOStream;
+import org.rx.util.function.BiAction;
 
 import java.sql.Connection;
 import java.util.*;
@@ -74,23 +76,25 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
                 r.setGroupId(groupId);
                 r.setCreateTime(DateTime.now());
             }
-            queues.get(consumer.getId());
+            r.setSuspend(consumer.isSuspend());
             r.setQueueSize(getConsumerQueueSize(consumer.getId()));
             r.setContent(consumer);
             db.save(r);
 
-            for (Tag tag : consumer.getTags()) {
-                if (Strings.isEmpty(tag.getName())) {
-                    continue;
-                }
+            if (consumer.getTags() != null) {
+                for (Tag tag : consumer.getTags()) {
+                    if (Strings.isEmpty(tag.getName())) {
+                        continue;
+                    }
 
-                TagEntity tr = new TagEntity();
-                tr.setId(computeTagId(r.getId(), tag));
-                tr.setGroupId(groupId);
-                tr.setConsumerId(r.getId());
-                tr.setName(tag.getName());
-                tr.setValue(tag.getValue());
-                db.save(tr);
+                    TagEntity tr = new TagEntity();
+                    tr.setId(computeTagId(r.getId(), tag));
+                    tr.setGroupId(groupId);
+                    tr.setConsumerId(r.getId());
+                    tr.setName(tag.getName());
+                    tr.setValue(tag.getValue());
+                    db.save(tr);
+                }
             }
             return true;
         }), false);
@@ -102,6 +106,29 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
             db.delete(queryTag().eq(TagEntity::getConsumerId, consumer.getId()));
             return db.deleteById(ConsumerEntity.class, computeId(consumer.getId()));
         }), false);
+    }
+
+    @Override
+    public Consumer<T> getById(long consumerId) {
+        ConsumerEntity<T> consumer = db.findById(ConsumerEntity.class, computeId(consumerId));
+        if (consumer == null) {
+            throw new InvalidException("Consumer %s not found", consumerId);
+        }
+        return consumer.content;
+    }
+
+    @Override
+    public void setById(long consumerId, BiAction<Consumer<T>> fn) {
+        db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
+            ConsumerEntity<T> r = db.findById(ConsumerEntity.class, computeId(consumerId));
+            Consumer<T> consumer = r.content;
+            fn.invoke(consumer);
+            r.setSuspend(consumer.isSuspend());
+            r.setStatus(consumer.getStatus());
+            r.setQueueSize(getConsumerQueueSize(consumer.getId()));
+            r.setContent(consumer);
+            db.save(r, false);
+        });
     }
 
     @Override
@@ -119,7 +146,8 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
 
     @Override
     public Consumer<T> next() {
-        List<ConsumerEntity<T>> r = db.findBy(query().ge(ConsumerEntity::getTtl, System.currentTimeMillis()).orderByDescending(ConsumerEntity::getQueueSize).limit(1));
+        List<ConsumerEntity<T>> r = db.findBy(query().ge(ConsumerEntity::getTtl, System.currentTimeMillis())
+                .eq(ConsumerEntity::isSuspend, false).orderByDescending(ConsumerEntity::getQueueSize).limit(1));
         if (CollectionUtils.isEmpty(r)) {
             return null;
         }
@@ -128,7 +156,8 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
 
     @Override
     public List<Consumer<T>> nextList(int size) {
-        List<ConsumerEntity<T>> r = db.findBy(query().ge(ConsumerEntity::getTtl, System.currentTimeMillis()).orderByDescending(ConsumerEntity::getQueueSize).limit(size));
+        List<ConsumerEntity<T>> r = db.findBy(query().ge(ConsumerEntity::getTtl, System.currentTimeMillis())
+                .eq(ConsumerEntity::isSuspend, false).orderByDescending(ConsumerEntity::getQueueSize).limit(size));
         if (CollectionUtils.isEmpty(r)) {
             return Collections.emptyList();
         }

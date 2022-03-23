@@ -27,7 +27,12 @@ public interface Queue<T extends QueueElement> {
 
     boolean offer(T element, boolean putFirst);
 
+    default void setPreferId(long elementId) {
+    }
+
     T take();
+
+    T poll();
 
     List<T> peek(int size);
 

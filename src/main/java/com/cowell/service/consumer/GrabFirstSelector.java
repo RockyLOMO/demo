@@ -15,6 +15,6 @@ public class GrabFirstSelector implements Selector {
     public <T extends QueueElement> Consumer<T> select(ConsumerGroup<T> store, T element) {
         Dispatcher<T> dispatcher = DispatchContext.current().getDispatcher();
 
-        return ifNull(NQuery.of(store.nextList(20), true).firstOrDefault(p -> dispatcher.accept(p, element)), store.next());
+        return ifNull(NQuery.of(store.nextList(20), true).firstOrDefault(p -> dispatcher.getHandler().testAccept(p.getId(), element)), store.next());
     }
 }

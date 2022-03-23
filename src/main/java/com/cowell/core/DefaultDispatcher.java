@@ -127,14 +127,14 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
                 return;
             }
 
-            Consumer<T> finalConsumer = consumer;
-            if (!handler.accept(consumer, element)) {
+            long consumerId = consumer.getId();
+            if (!handler.accept(consumerId, element)) {
                 if (maxAcceptMillis == Constants.TIMEOUT_INFINITE) {
                     sleep(0);
                     continue;
                 }
                 try {
-                    FluentWait.newInstance(maxAcceptMillis).until(s -> handler.accept(finalConsumer, element));
+                    FluentWait.newInstance(maxAcceptMillis).until(s -> handler.accept(consumerId, element));
                 } catch (TimeoutException e) {
                     continue;
                 }

@@ -17,6 +17,7 @@ import org.rx.io.IOStream;
 import java.sql.Connection;
 import java.util.*;
 
+import static org.rx.core.App.isProxyClass;
 import static org.rx.core.App.proxy;
 import static org.rx.core.Extends.ifNull;
 import static org.rx.core.Extends.quietly;
@@ -37,6 +38,17 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
     @Override
     public QueueKind getKind() {
         return QueueKind.LOCAL_H2;
+    }
+
+    public void setPreferId(long preferId) {
+        db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
+            ElementEntity<T> r = db.findById(ElementEntity.class, preferId);
+            if (r == null) {
+                return;
+            }
+            r.setCreateTime(DateTime.MIN);
+            db.save(r, false);
+        });
     }
 
     public LocalQueue(@NonNull String queueId, long capacity) {
@@ -61,7 +73,11 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
     }
 
     T wrap(T elm) {
-        return (T) proxy(elm.getClass(), (m, p) -> {
+        Class<? extends QueueElement> x = elm.getClass();
+        if (isProxyClass(x)) {
+            return elm;
+        }
+        return (T) proxy(x, (m, p) -> {
             if (m.getName().startsWith("set")) {
                 Tasks.setTimeout(() -> db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
                     long id = computeId(elm.getId());
@@ -124,7 +140,8 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
         return wrap(elm);
     }
 
-    T poll() {
+    @Override
+    public T poll() {
         return quietly(() -> db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
             List<ElementEntity<T>> rs = db.findBy(query().orderBy(ElementEntity::getCreateTime).limit(1));
             if (CollectionUtils.isEmpty(rs)) {

@@ -42,6 +42,11 @@ public class ShardingH2Queue<T extends QueueElement> implements Queue<T> {
     }
 
     @Override
+    public T poll() {
+        return null;
+    }
+
+    @Override
     public List<T> peek(int size) {
         return null;
     }
