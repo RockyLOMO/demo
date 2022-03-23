@@ -6,13 +6,11 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.rx.bean.DateTime;
 import org.rx.core.Constants;
 import org.rx.core.NQuery;
-import org.rx.core.StringBuilder;
 import org.rx.core.Strings;
 import org.rx.io.EntityDatabase;
 import org.rx.io.EntityQueryLambda;
 import org.rx.io.IOStream;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,11 +41,14 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
         return new EntityQueryLambda<>(TagEntity.class).eq(TagEntity::getGroupId, groupId);
     }
 
-    long getTagId(long consumerId, Tag tag) {
+    long computeId(long consumerId) {
+        return IOStream.checksum(groupId, String.valueOf(consumerId));
+    }
+
+    long computeTagId(long consumerId, Tag tag) {
         require(tag, !Strings.isEmpty(tag.getName()));
 
-        return IOStream.checksum(new StringBuilder(groupId).append(consumerId)
-                .append(tag.getName()).append(tag.getValue()).toString().getBytes(StandardCharsets.UTF_8));
+        return IOStream.checksum(groupId, String.valueOf(consumerId), tag.getName(), tag.getValue());
     }
 
     String getQueueId(long consumerId) {
@@ -62,10 +63,11 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
     @Override
     public boolean add(Consumer<T> consumer) {
         return ifNull(db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
-            ConsumerEntity<T> r = db.findById(ConsumerEntity.class, consumer.getId());
+            long id = computeId(consumer.getId());
+            ConsumerEntity<T> r = db.findById(ConsumerEntity.class, id);
             if (r == null) {
                 r = new ConsumerEntity<>();
-                r.setId(consumer.getId());
+                r.setId(id);
                 r.setGroupId(groupId);
                 r.setCreateTime(DateTime.now());
             }
@@ -79,7 +81,7 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
                 }
 
                 TagEntity tr = new TagEntity();
-                tr.setId(getTagId(r.getId(), tag));
+                tr.setId(computeTagId(r.getId(), tag));
                 tr.setGroupId(groupId);
                 tr.setConsumerId(r.getId());
                 tr.setName(tag.getName());
@@ -93,14 +95,14 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
     @Override
     public boolean remove(Consumer<T> consumer) {
         return ifNull(db.transInvoke(Connection.TRANSACTION_NONE, () -> {
-            db.delete(queryTag());
-            return db.deleteById(ConsumerEntity.class, consumer.getId());
+            db.delete(queryTag().eq(TagEntity::getConsumerId, consumer.getId()));
+            return db.deleteById(ConsumerEntity.class, computeId(consumer.getId()));
         }), false);
     }
 
     @Override
-    public Queue<T> getConsumerQueue(long id) {
-        return subQueues.computeIfAbsent(id, k -> getKind().newQueue(getQueueId(id), Integer.MAX_VALUE));
+    public Queue<T> getConsumerQueue(long consumerId) {
+        return subQueues.computeIfAbsent(consumerId, k -> getKind().newQueue(getQueueId(consumerId), Integer.MAX_VALUE));
     }
 
     @Override

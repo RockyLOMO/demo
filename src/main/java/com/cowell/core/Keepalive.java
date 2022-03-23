@@ -1,4 +1,4 @@
-package com.cowell.service.keepalive;
+package com.cowell.core;
 
 public interface Keepalive {
     boolean isValid();

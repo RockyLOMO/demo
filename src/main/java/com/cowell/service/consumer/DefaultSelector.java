@@ -15,15 +15,17 @@ public class DefaultSelector implements Selector {
     public static final DefaultSelector INSTANCE = new DefaultSelector();
 
     @Override
-    public <T extends QueueElement> Consumer<T> select(ConsumerStore<T> store, T element) {
-        Tag idTag = NQuery.of(element.getTags()).firstOrDefault(p -> eq(p.getName(), ID_TAG_NAME));
+    public <T extends QueueElement> Consumer<T> select(ConsumerGroup<T> store, T element) {
+        DispatchContext ctx = DispatchContext.current();
+
+        Tag idTag = NQuery.of(element.getPreferTags()).firstOrDefault(p -> eq(p.getName(), ID_TAG_NAME));
         Consumer<T> first = null;
-        for (Consumer<T> consumer : store.findByTags(element.getTags())) {
+        for (Consumer<T> consumer : store.findByTags(element.getPreferTags())) {
             log.debug("tag capacity: {} -> {}", consumer, element);
             if (first == null) {
                 first = consumer;
             }
-            if (consumer.isValid()) {
+            if (ctx.getDispatcher().getKeepaliveManager().isValid(consumer.getId())) {
                 return consumer;
             }
         }

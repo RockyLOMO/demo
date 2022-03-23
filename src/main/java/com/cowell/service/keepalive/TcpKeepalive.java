@@ -4,25 +4,20 @@ import com.cowell.core.Keepalive;
 import com.cowell.core.KeepaliveManager;
 import lombok.RequiredArgsConstructor;
 
-//client ajax ack -> server
-//server feign -> server
+//todo
 @RequiredArgsConstructor
-public class HttpPassiveKeepalive implements Keepalive {
+public class TcpKeepalive implements Keepalive {
     final KeepaliveManager manager;
     final long id;
     final long maxMissDuration;
 
     @Override
-    public synchronized boolean isValid() {
-        return manager.isValid(id);
-    }
-
-    public synchronized void passiveAck() {
-        manager.receiveAck(id, maxMissDuration);
+    public boolean isValid() {
+        return false;
     }
 
     @Override
     public boolean sendAck() {
-        return isValid();
+        return false;
     }
 }

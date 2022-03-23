@@ -13,7 +13,11 @@ public interface Queue<T extends QueueElement> {
 
     long size();
 
-    boolean offer(T element);
+    default boolean offer(T element) {
+        return offer(element, false);
+    }
+
+    boolean offer(T element, boolean putFirst);
 
     T take();
 

@@ -8,12 +8,11 @@ import java.util.List;
 public interface QueueElement extends Extends {
     long getId();
 
-    boolean isValid();
+    QueueElementStatus getStatus();
 
-    default List<Tag> getTags() {
+    void setStatus(QueueElementStatus status);
+
+    default List<Tag> getPreferTags() {
         return Collections.emptyList();
-    }
-
-    default void onDiscard(DiscardReason reason) {
     }
 }

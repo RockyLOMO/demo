@@ -50,7 +50,8 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
     }
 
     EntityQueryLambda<ElementEntity<T>> query() {
-        return (EntityQueryLambda<ElementEntity<T>>) (EntityQueryLambda) new EntityQueryLambda<>(ElementEntity.class).eq(ElementEntity::getQueueId, queueId);
+        return (EntityQueryLambda<ElementEntity<T>>) (EntityQueryLambda) new EntityQueryLambda<>(ElementEntity.class)
+                .eq(ElementEntity::getQueueId, queueId);
     }
 
     T wrap(T elm) {
@@ -73,10 +74,6 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
     }
 
     @Override
-    public boolean offer(T element) {
-        return offer(element, false);
-    }
-
     public boolean offer(@NonNull T element, boolean putFirst) {
         return ifNull(db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
             if (db.existsById(ElementEntity.class, element.getId()) || size() > capacity) {
@@ -88,10 +85,11 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
             entity.setQueueId(queueId);
             entity.setContent(element);
             if (putFirst) {
-                entity.setCreateTime(DateTime.now().getDateComponent());
+                entity.setCreateTime(DateTime.MIN);
             } else {
                 entity.setCreateTime(DateTime.now());
             }
+            element.setStatus(QueueElementStatus.QUEUED);
             db.save(entity, true);
             synchronized (db) {
                 db.notifyAll();
@@ -106,7 +104,7 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
         T elm;
         while ((elm = poll()) == null) {
             synchronized (db) {
-                db.wait();
+                db.wait(writeBackDelay);
             }
         }
         return wrap(elm);

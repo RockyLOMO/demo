@@ -7,13 +7,11 @@ import java.util.List;
 public interface Consumer<T extends QueueElement> extends Serializable {
     long getId();
 
-    boolean isValid();
+    ConsumerStatus getStatus();
+
+    void setStatus(ConsumerStatus status);
 
     default List<Tag> getTags() {
         return Collections.emptyList();
     }
-
-    boolean accept(T element);
-
-    void consume(T element);
 }

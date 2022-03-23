@@ -13,6 +13,7 @@ public class ElementEntity<T extends QueueElement> implements Serializable {
     long id;
     @DbColumn(index = DbColumn.IndexKind.INDEX_ASC)
     String queueId;
+    boolean valid;
     T content;
     @DbColumn(index = DbColumn.IndexKind.INDEX_ASC)
     Date createTime;

@@ -19,12 +19,12 @@ public enum QueueKind {
         }
     }
 
-    public <T extends QueueElement> ConsumerGroup<T> newStore() {
+    public <T extends QueueElement> ConsumerGroup<T> newGroup(String groupId) {
         switch (this) {
             case SHARDING_H2:
                 return new ShardingH2Store<>();
             default:
-                return new LocalGroup<>();
+                return new LocalGroup<>(groupId);
         }
     }
 }

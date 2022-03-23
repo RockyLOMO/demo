@@ -32,7 +32,7 @@ public class ShardingH2Queue<T extends QueueElement> implements Queue<T> {
     }
 
     @Override
-    public boolean offer(T element) {
+    public boolean offer(T element, boolean putFirst) {
         return false;
     }
 
