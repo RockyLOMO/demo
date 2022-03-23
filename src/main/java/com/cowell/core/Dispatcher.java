@@ -5,7 +5,7 @@ import java.util.concurrent.CompletableFuture;
 public interface Dispatcher<T extends QueueElement> {
     Queue<T> getQueue();
 
-    ConsumerStore<T> getStore();
+    ConsumerGroup<T> getStore();
 
     Selector getSelector();
 

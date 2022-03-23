@@ -2,9 +2,11 @@ package com.cowell.core;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.rx.core.Extends;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class Tag implements Extends {
     String name;

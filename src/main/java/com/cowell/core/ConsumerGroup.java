@@ -3,22 +3,22 @@ package com.cowell.core;
 import java.util.List;
 import java.util.Set;
 
-public interface ConsumerStore<T extends QueueElement> {
+public interface ConsumerGroup<T extends QueueElement> {
     QueueKind getKind();
 
-    int size();
+    long size();
 
     boolean add(Consumer<T> consumer);
 
     boolean remove(Consumer<T> consumer);
 
+    Queue<T> getConsumerQueue(long id);
+
     Consumer<T> next();
 
-    Set<Consumer<T>> nextSet(int takeCount);
+    List<Consumer<T>> nextList(int size);
 
     Set<Tag> getTagCapacities();
 
-    Set<Consumer<T>> findByTags(List<Tag> tags);
-
-    Queue<T> getConsumerQueue(long id);
+    List<Consumer<T>> findByTags(List<Tag> tags);
 }

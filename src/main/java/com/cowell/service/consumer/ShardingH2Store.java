@@ -6,7 +6,7 @@ import org.rx.io.ShardingEntityDatabase;
 import java.util.List;
 import java.util.Set;
 
-public class ShardingH2Store<T extends QueueElement> implements ConsumerStore<T> {
+public class ShardingH2Store<T extends QueueElement> implements ConsumerGroup<T> {
     public static final ShardingEntityDatabase EDB = null;
 
     @Override
@@ -15,7 +15,7 @@ public class ShardingH2Store<T extends QueueElement> implements ConsumerStore<T>
     }
 
     @Override
-    public int size() {
+    public long size() {
         return 0;
     }
 
@@ -30,12 +30,17 @@ public class ShardingH2Store<T extends QueueElement> implements ConsumerStore<T>
     }
 
     @Override
+    public Queue<T> getConsumerQueue(long id) {
+        return null;
+    }
+
+    @Override
     public Consumer<T> next() {
         return null;
     }
 
     @Override
-    public Set<Consumer<T>> nextSet(int takeCount) {
+    public List<Consumer<T>> nextList(int takeCount) {
         return null;
     }
 
@@ -45,12 +50,7 @@ public class ShardingH2Store<T extends QueueElement> implements ConsumerStore<T>
     }
 
     @Override
-    public Set<Consumer<T>> findByTags(List<Tag> tags) {
-        return null;
-    }
-
-    @Override
-    public Queue<T> getConsumerQueue(long id) {
+    public List<Consumer<T>> findByTags(List<Tag> tags) {
         return null;
     }
 }

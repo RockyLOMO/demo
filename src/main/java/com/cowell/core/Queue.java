@@ -9,9 +9,9 @@ public interface Queue<T extends QueueElement> {
 
     void setName(String name);
 
-    int getCapacity();
+    long getCapacity();
 
-    int size();
+    long size();
 
     boolean offer(T element);
 
