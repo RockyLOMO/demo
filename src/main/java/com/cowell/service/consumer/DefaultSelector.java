@@ -26,7 +26,7 @@ public class DefaultSelector implements Selector {
             if (first == null) {
                 first = consumer;
             }
-            if (dispatcher.getKeepaliveManager().isValid(KeepaliveManager.Region.CONSUMER, consumer.getId())) {
+            if (dispatcher.isConsumerValid(consumer)) {
                 return consumer;
             }
         }

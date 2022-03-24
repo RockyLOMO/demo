@@ -23,7 +23,8 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
         final DiscardReason reason;
     }
 
-    public final Delegate<DefaultDispatcher<T>, DiscardEventArgs<T>> onDiscard = Delegate.create();
+    public final Delegate<DefaultDispatcher<T>, DiscardEventArgs<T>> onDiscard = Delegate.<DefaultDispatcher<T>, DiscardEventArgs<T>>create()
+            .head((s, e) -> e.element.setStatus(QueueElementStatus.DETACHED));
     @Getter
     final KeepaliveManager keepaliveManager;
     @Getter

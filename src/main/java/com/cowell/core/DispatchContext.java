@@ -20,7 +20,7 @@ public final class DispatchContext {
         return TL.getIfExists();
     }
 
-    public static <T extends QueueElement> DispatchContext set(Dispatcher<T> dispatcher) {
+    static <T extends QueueElement> DispatchContext set(Dispatcher<T> dispatcher) {
         DispatchContext ctx = TL.getIfExists();
         if (ctx == null) {
             TL.set(ctx = new DispatchContext());
