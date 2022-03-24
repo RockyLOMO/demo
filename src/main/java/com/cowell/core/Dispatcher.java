@@ -15,5 +15,13 @@ public interface Dispatcher<T extends QueueElement> {
 
     void dispatch(T element);
 
+    boolean isElementValid(T t);
+
+    void renewElementTtl(long id);
+
+    boolean isConsumerValid(Consumer<T> t);
+
+    void renewConsumerTtl(long id);
+
     CompletableFuture<Void> startAsync();
 }

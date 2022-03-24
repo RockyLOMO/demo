@@ -8,7 +8,11 @@ public interface KeepaliveManager {
 
     boolean isValid(Region region, long id);
 
-    void receiveAck(Region region, long id, long maxMissDuration);
+    default void receiveAck(Region region, long id) {
+        receiveAck(region, id, 30000);
+    }
+
+    void receiveAck(Region region, long id, long ttl);
 
     default <T extends KAEntity> Keepalive newKeepalive(KeepaliveKind kind, Region region, long id) {
         return newKeepalive(kind, region, id, 30000);

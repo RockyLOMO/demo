@@ -1,6 +1,5 @@
 package com.cowell.core;
 
-import com.cowell.service.keepalive.LocalKeepaliveManager;
 import io.netty.util.concurrent.FastThreadLocal;
 import lombok.Getter;
 import org.rx.exception.InvalidException;
@@ -17,6 +16,10 @@ public final class DispatchContext {
         return ctx;
     }
 
+    public static DispatchContext get() {
+        return TL.getIfExists();
+    }
+
     public static <T extends QueueElement> DispatchContext set(Dispatcher<T> dispatcher) {
         DispatchContext ctx = TL.getIfExists();
         if (ctx == null) {
@@ -31,11 +34,4 @@ public final class DispatchContext {
     public <T extends QueueElement> Dispatcher<T> getDispatcher() {
         return dispatcher;
     }
-
-//    public <T> void setEntityType(Class<T> entityType) {
-//        KeepaliveManager manager = dispatcher.getKeepaliveManager();
-//        if (manager instanceof LocalKeepaliveManager) {
-//            LocalKeepaliveManager.ENTITY_TYPE.set(entityType);
-//        }
-//    }
 }

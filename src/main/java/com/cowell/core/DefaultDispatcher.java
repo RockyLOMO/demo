@@ -36,6 +36,8 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
     final ConsumerHandler<T> handler;
 
     @Setter
+    long renewTtl = 30 * 1000;
+    @Setter
     long maxWaitInvalidMillis = 5 * 1000;
     @Setter
     boolean putFirstOnReValid;
@@ -43,7 +45,7 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
     long maxCheckValidMillis = 5 * 60 * 1000;
 
     @Setter
-    long switchAsyncThreshold = 5 * 1000;
+    long switchAsyncThreshold = 4 * 1000;
     @Setter
     long maxAcceptMillis = 5 * 1000;
     @Setter
@@ -76,21 +78,21 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
     @Override
     public void dispatch(T element) {
         DispatchContext.set(this);
-        if (!keepaliveManager.isValid(KeepaliveManager.Region.ELEMENT, element.getId())) {
-            log.debug("element invalid: {}", element);
+        if (!isElementValid(element)) {
+//            log.debug("element invalid: {}", element);
             try {
-                FluentWait.newInstance(maxWaitInvalidMillis).until(s -> keepaliveManager.isValid(KeepaliveManager.Region.ELEMENT, element.getId()));
+                FluentWait.newInstance(maxWaitInvalidMillis).until(s -> isElementValid(element));
             } catch (TimeoutException e) {
                 AtomicLong sum = new AtomicLong();
                 Tasks.timer().setTimeout(() -> {
-                    if (!keepaliveManager.isValid(KeepaliveManager.Region.ELEMENT, element.getId())) {
+                    if (!isElementValid(element)) {
                         return true;
                     }
                     queue.offer(element, putFirstOnReValid);
                     return false;
                 }, d -> {
                     long nd = d >= 5000L ? 5000L : Math.max(d * 2L, 100L);
-                    log.debug("reValid check: {} | {}", nd, sum);
+//                    log.debug("reValid check: {} | {}", nd, sum);
                     if (sum.addAndGet(nd) > maxCheckValidMillis) {
                         raiseEvent(onDiscard, new DiscardEventArgs<>(element, DiscardReason.CHECK_VALID_TIMEOUT));
                         return Constants.TIMEOUT_INFINITE;
@@ -140,5 +142,25 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
             return;
         }
         raiseEvent(onDiscard, new DiscardEventArgs<>(element, DiscardReason.CONSUMER_INVALID));
+    }
+
+    @Override
+    public boolean isElementValid(T t) {
+        return keepaliveManager.isValid(KeepaliveManager.Region.ELEMENT, queue.computeId(t.getId()));
+    }
+
+    @Override
+    public void renewElementTtl(long id) {
+        keepaliveManager.receiveAck(KeepaliveManager.Region.ELEMENT, queue.computeId(id), renewTtl);
+    }
+
+    @Override
+    public boolean isConsumerValid(Consumer<T> t) {
+        return keepaliveManager.isValid(KeepaliveManager.Region.CONSUMER, group.computeId(t.getId()));
+    }
+
+    @Override
+    public void renewConsumerTtl(long id) {
+        keepaliveManager.receiveAck(KeepaliveManager.Region.CONSUMER, group.computeId(id), renewTtl);
     }
 }

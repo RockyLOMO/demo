@@ -30,14 +30,14 @@ public class LocalKeepaliveManager implements KeepaliveManager {
     }
 
     @Override
-    public void receiveAck(Region region, long id, long maxMissDuration) {
+    public void receiveAck(Region region, long id, long ttl) {
         Class<KAEntity> entityType = entityType(region);
         db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
             KAEntity r = db.findById(entityType, id);
             if (r == null) {
                 return;
             }
-            r.setTtl(System.currentTimeMillis() + maxMissDuration);
+            r.setTtl(System.currentTimeMillis() + ttl);
             db.save(r);
         });
     }

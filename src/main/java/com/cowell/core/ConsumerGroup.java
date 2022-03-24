@@ -8,6 +8,10 @@ import java.util.Set;
 public interface ConsumerGroup<T extends QueueElement> {
     QueueKind getKind();
 
+    default long computeId(long consumerId) {
+        return consumerId;
+    }
+
     long size();
 
     boolean add(Consumer<T> consumer);

@@ -48,7 +48,8 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
         return new EntityQueryLambda<>(TagEntity.class).eq(TagEntity::getGroupId, groupId);
     }
 
-    long computeId(long consumerId) {
+    @Override
+    public long computeId(long consumerId) {
         return IOStream.checksum(groupId, String.valueOf(consumerId));
     }
 

@@ -13,6 +13,10 @@ public interface Queue<T extends QueueElement> {
 
     QueueKind getKind();
 
+    default long computeId(long elementId) {
+        return elementId;
+    }
+
     String getName();
 
     void setName(String name);
