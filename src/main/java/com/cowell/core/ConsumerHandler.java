@@ -9,7 +9,7 @@ public interface ConsumerHandler<T extends QueueElement> {
 
     List<T> getAcceptedList(long consumerId);
 
-    void beginConsume(long consumerId, Long preferElementId);
+    T beginConsume(long consumerId, Long preferElementId);
 
     void endConsume(long consumerId);
 }

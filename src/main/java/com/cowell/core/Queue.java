@@ -23,6 +23,8 @@ public interface Queue<T extends QueueElement> {
 
     long getCapacity();
 
+    void setCapacity(long capacity);
+
     long size();
 
     default boolean offer(T element) {
@@ -36,11 +38,19 @@ public interface Queue<T extends QueueElement> {
 
     T take();
 
-    T poll();
+    default T poll() {
+        return poll(null);
+    }
 
-    List<T> peek(int size);
+    T poll(Long elementId);
 
-    T pollById(long elementId);
+    default T peek() {
+        return peek(null);
+    }
+
+    T peek(Long elementId);
+
+    List<T> peekList(int size);
 
     int getOrdinal(T element);
 }

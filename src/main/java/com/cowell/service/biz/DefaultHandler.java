@@ -11,18 +11,18 @@ import java.util.List;
 
 import static org.rx.core.Extends.sleep;
 
-//todo keepalive
 @Slf4j
 @RequiredArgsConstructor
 public class DefaultHandler<T extends QueueElement> extends Disposable implements ConsumerHandler<T> {
+    final ConsumerGroup<T> group;
     final Lock lock;
     @Setter
     int maxPeekSize = 100;
-    ConsumerGroup<T> group;
 
     ConsumerGroup<T> getGroup() {
-        if (group == null) {
-            throw new InvalidException("Group not found");
+        DispatchContext ctx = DispatchContext.get();
+        if (ctx != null) {
+            return (ConsumerGroup<T>) ctx.getDispatcher().getGroup();
         }
         return group;
     }
@@ -33,57 +33,57 @@ public class DefaultHandler<T extends QueueElement> extends Disposable implement
 
     @Override
     public boolean testAccept(long consumerId, T element) {
-        Dispatcher<T> dispatcher = DispatchContext.current().getDispatcher();
-        Consumer<T> consumer = dispatcher.getGroup().getById(consumerId);
+        ConsumerGroup<T> group = getGroup();
+        Consumer<T> consumer = group.getById(consumerId);
         return consumer.getStatus() == ConsumerStatus.IDLE;
     }
 
     //不加锁
     @Override
     public boolean accept(long consumerId, T element) {
-        Dispatcher<T> dispatcher = DispatchContext.current().getDispatcher();
-        Queue<T> queue = (group = dispatcher.getGroup()).getConsumerQueue(consumerId);
+        ConsumerGroup<T> group = getGroup();
+        Queue<T> queue = group.getConsumerQueue(consumerId);
         if (!queue.offer(element)) {
             return false;
         }
         element.setStatus(QueueElementStatus.ACCEPTED);
+        log.debug("accept {}", element);
         return true;
     }
 
     @Override
     public List<T> getAcceptedList(long consumerId) {
-        return getGroup().getConsumerQueue(consumerId).peek(maxPeekSize);
+        ConsumerGroup<T> group = getGroup();
+        return group.getConsumerQueue(consumerId).peekList(maxPeekSize);
     }
 
-//    public void setPreferId(Consumer<T> consumer, long elementId) {
-//        Dispatcher<T> dispatcher = DispatchContext.current().getDispatcher();
-//        dispatcher.getGroup().getConsumerQueue(consumer.getId()).setPreferId(elementId);
-//    }
-
     public void suspend(long consumerId) {
+        ConsumerGroup<T> group = getGroup();
         lock.lock();
         try {
-            getGroup().setById(consumerId, p -> p.setSuspend(true));
+            group.setById(consumerId, p -> p.setSuspend(true));
         } finally {
             lock.unlock();
         }
     }
 
     public void resume(long consumerId) {
+        ConsumerGroup<T> group = getGroup();
         lock.lock();
         try {
-            getGroup().setById(consumerId, p -> p.setSuspend(false));
+            group.setById(consumerId, p -> p.setSuspend(false));
         } finally {
             lock.unlock();
         }
     }
 
     @Override
-    public void beginConsume(long consumerId, Long preferElementId) {
+    public T beginConsume(long consumerId, Long preferElementId) {
         ConsumerGroup<T> group = getGroup();
         if (!lock.tryLock()) {
             throw new InvalidException("Consumer locked");
         }
+
         Consumer<T> consumer;
         T elm;
         try {
@@ -94,9 +94,9 @@ public class DefaultHandler<T extends QueueElement> extends Disposable implement
             }
 
             Queue<T> queue = group.getConsumerQueue(consumer.getId());
-            elm = preferElementId != null ? queue.pollById(preferElementId) : queue.poll();
+            elm = queue.peek(preferElementId);
             if (elm == null) {
-                return;
+                return null;
             }
             consumer.setStatus(ConsumerStatus.BUSY);
             group.setById(consumer.getId(), p -> p.setStatus(consumer.getStatus()));
@@ -105,19 +105,23 @@ public class DefaultHandler<T extends QueueElement> extends Disposable implement
         }
 
         //自定义业务
-        elm.setStatus(QueueElementStatus.DETACHED);
-        log.info("consume {} -> {}", consumer, elm);
+        elm.setStatus(QueueElementStatus.CONSUMED);
+        log.info("beginConsume {} -> {}", consumer, elm);
         sleep(2000);
+        return elm;
     }
 
     @Override
     public void endConsume(long consumerId) {
+        ConsumerGroup<T> group = getGroup();
+        Consumer<T> consumer;
         lock.lock();
         try {
-            Consumer<T> consumer = getGroup().getById(consumerId);
+            consumer = group.getById(consumerId);
             if (consumer.getStatus() != ConsumerStatus.BUSY) {
                 throw new InvalidException("Invalid consumer status");
             }
+
             consumer.setStatus(ConsumerStatus.IDLE);
             group.setById(consumer.getId(), p -> p.setStatus(consumer.getStatus()));
         } finally {
@@ -125,6 +129,6 @@ public class DefaultHandler<T extends QueueElement> extends Disposable implement
         }
 
         //自定义业务
-
+        log.info("endConsume {}", consumer);
     }
 }

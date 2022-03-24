@@ -27,6 +27,11 @@ public class ShardingH2Queue<T extends QueueElement> implements Queue<T> {
     }
 
     @Override
+    public void setCapacity(long capacity) {
+
+    }
+
+    @Override
     public long size() {
         return 0;
     }
@@ -42,17 +47,17 @@ public class ShardingH2Queue<T extends QueueElement> implements Queue<T> {
     }
 
     @Override
-    public T poll() {
+    public T poll(Long elementId) {
         return null;
     }
 
     @Override
-    public List<T> peek(int size) {
+    public T peek(Long elementId) {
         return null;
     }
 
     @Override
-    public T pollById(long elementId) {
+    public List<T> peekList(int size) {
         return null;
     }
 

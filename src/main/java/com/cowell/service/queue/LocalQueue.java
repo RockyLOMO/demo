@@ -14,6 +14,7 @@ import org.rx.core.*;
 import org.rx.io.EntityDatabase;
 import org.rx.io.EntityQueryLambda;
 import org.rx.io.IOStream;
+import org.rx.util.function.Func;
 
 import java.sql.Connection;
 import java.util.*;
@@ -27,7 +28,8 @@ import static org.rx.core.Extends.quietly;
 public class LocalQueue<T extends QueueElement> implements Queue<T> {
     final String queueId;
     @Getter
-    final long capacity;
+    @Setter
+    long capacity;
     final EntityDatabase db = EntityDatabase.DEFAULT;
     @Getter
     @Setter
@@ -137,7 +139,7 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
     @Override
     public T take() {
         T elm;
-        while ((elm = poll()) == null) {
+        while ((elm = quietly((Func<T>) this::poll)) == null) {
             synchronized (db) {
                 db.wait(writeBackDelay);
             }
@@ -146,30 +148,9 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
     }
 
     @Override
-    public T poll() {
-        return quietly(() -> db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
-            List<ElementEntity<T>> rs = db.findBy(query().orderBy(ElementEntity::getCreateTime).limit(1));
-            if (CollectionUtils.isEmpty(rs)) {
-                return null;
-            }
-            ElementEntity<T> elm = rs.get(0);
-            elm.setStatus(QueueElementStatus.TAKEN);
-            elm.content.setStatus(elm.getStatus());
-            db.save(elm, false);
-            return wrap(elm.content);
-        }));
-    }
-
-    @Override
-    public List<T> peek(int size) {
-        return NQuery.of(db.findBy(query().orderBy(ElementEntity::getCreateTime).limit(size))).select(p -> wrap(p.content)).toList();
-    }
-
-    @Override
-    public T pollById(long elementId) {
+    public T poll(Long elementId) {
         return db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
-            long id = computeId(elementId);
-            ElementEntity<T> elm = (ElementEntity<T>) db.findById(ElementEntity.class, id);
+            ElementEntity<T> elm = first(elementId);
             if (elm == null) {
                 return null;
             }
@@ -178,6 +159,37 @@ public class LocalQueue<T extends QueueElement> implements Queue<T> {
             db.save(elm, false);
             return wrap(elm.content);
         });
+    }
+
+    ElementEntity<T> first(Long elementId) {
+        ElementEntity<T> elm;
+        if (elementId != null) {
+            long id = computeId(elementId);
+            if ((elm = (ElementEntity<T>) db.findById(ElementEntity.class, id)) == null) {
+                return null;
+            }
+        } else {
+            List<ElementEntity<T>> rs = db.findBy(query().orderBy(ElementEntity::getCreateTime).limit(1));
+            if (CollectionUtils.isEmpty(rs)) {
+                return null;
+            }
+            elm = rs.get(0);
+        }
+        return elm;
+    }
+
+    @Override
+    public T peek(Long elementId) {
+        ElementEntity<T> elm = first(elementId);
+        if (elm == null) {
+            return null;
+        }
+        return wrap(elm.content);
+    }
+
+    @Override
+    public List<T> peekList(int size) {
+        return NQuery.of(db.findBy(query().orderBy(ElementEntity::getCreateTime).limit(size))).select(p -> wrap(p.content)).toList();
     }
 
     @Override
