@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Util {
-    static final Queue<Patient> queue = new LocalQueue<>("test-001", Integer.MAX_VALUE);
+    static final LocalQueue<Patient> queue = new LocalQueue<>("test-001", Integer.MAX_VALUE);
     static final ConsumerGroup<Patient> group = new LocalGroup<>("test-002");
 
     static final List<Doctor> doctors = new ArrayList<>();

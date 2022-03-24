@@ -1,17 +1,22 @@
 package com.cowell.core;
 
 public interface KeepaliveManager {
-    <T extends KAEntity> boolean isValid(Class<T> entityType, long id);
-
-    <T extends KAEntity> void receiveAck(Class<T> entityType, long id, long maxMissDuration);
-
-    default <T extends KAEntity> Keepalive newKeepalive(KeepaliveKind kind, T entity) {
-        return newKeepalive(kind, entity, 30000);
+    enum Region {
+        ELEMENT,
+        CONSUMER
     }
 
-    default <T extends KAEntity> Keepalive newKeepalive(KeepaliveKind kind, T entity, long interval, int retry) {
-        return newKeepalive(kind, entity, interval * retry);
+    boolean isValid(Region region, long id);
+
+    void receiveAck(Region region, long id, long maxMissDuration);
+
+    default <T extends KAEntity> Keepalive newKeepalive(KeepaliveKind kind, Region region, long id) {
+        return newKeepalive(kind, region, id, 30000);
     }
 
-    <T extends KAEntity> Keepalive newKeepalive(KeepaliveKind kind, T entity, long maxMissDuration);
+    default <T extends KAEntity> Keepalive newKeepalive(KeepaliveKind kind, Region region, long id, long interval, int retry) {
+        return newKeepalive(kind, region, id, interval * retry);
+    }
+
+    Keepalive newKeepalive(KeepaliveKind kind, Region region, long id, long maxMissDuration);
 }

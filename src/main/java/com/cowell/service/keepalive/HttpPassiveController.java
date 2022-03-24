@@ -14,13 +14,13 @@ public class HttpPassiveController {
 
     @SneakyThrows
     @RequestMapping("/_ack")
-    public void ack(String entityType, Long id, Long maxMissDuration) {
-        if (entityType == null || id == null) {
+    public void ack(String region, Long id, Long maxMissDuration) {
+        if (region == null || id == null) {
             return;
         }
         if (maxMissDuration == null) {
             maxMissDuration = Consts.DEFAULT_MISS_DURATION;
         }
-        manager.receiveAck((Class) Class.forName(entityType), id, maxMissDuration);
+        manager.receiveAck(KeepaliveManager.Region.valueOf(region), id, maxMissDuration);
     }
 }

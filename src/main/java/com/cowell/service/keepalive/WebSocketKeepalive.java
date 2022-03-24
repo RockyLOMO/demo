@@ -11,7 +11,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketKeepalive implements Keepalive {
     final KeepaliveManager manager;
-    final KAEntity entity;
+    final KeepaliveManager.Region region;
+    final long id;
     final long maxMissDuration;
 
     @Override

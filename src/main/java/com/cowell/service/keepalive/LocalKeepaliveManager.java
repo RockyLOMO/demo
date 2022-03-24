@@ -4,32 +4,36 @@ import com.cowell.core.KAEntity;
 import com.cowell.core.Keepalive;
 import com.cowell.core.KeepaliveKind;
 import com.cowell.core.KeepaliveManager;
-import io.netty.util.concurrent.FastThreadLocal;
-import org.rx.exception.InvalidException;
+import com.cowell.service.consumer.ConsumerEntity;
+import com.cowell.service.queue.ElementEntity;
 import org.rx.io.EntityDatabase;
 
 import java.sql.Connection;
 
 public class LocalKeepaliveManager implements KeepaliveManager {
-    //    public static final FastThreadLocal<Class> ENTITY_TYPE = new FastThreadLocal<>();
     final EntityDatabase db = EntityDatabase.DEFAULT;
 
-//    <T extends KAEntity> Class<T> entityType() {
-//        Class<T> type = ENTITY_TYPE.get();
-//        if (type == null) {
-//            throw new InvalidException("No entity type from context");
-//        }
-//        return type;
-//    }
+    <T extends KAEntity> Class<T> entityType(Region region) {
+        switch (region) {
+            case CONSUMER:
+                return (Class<T>) ConsumerEntity.class;
+            default:
+                return (Class<T>) ElementEntity.class;
+        }
+    }
 
-    public <T extends KAEntity> boolean isValid(Class<T> entityType, long id) {
-        T r = db.findById(entityType, id);
+    @Override
+    public boolean isValid(Region region, long id) {
+        Class<KAEntity> entityType = entityType(region);
+        KAEntity r = db.findById(entityType, id);
         return r != null && r.getTtl() >= System.currentTimeMillis();
     }
 
-    public <T extends KAEntity> void receiveAck(Class<T> entityType, long id, long maxMissDuration) {
+    @Override
+    public void receiveAck(Region region, long id, long maxMissDuration) {
+        Class<KAEntity> entityType = entityType(region);
         db.transInvoke(Connection.TRANSACTION_READ_COMMITTED, () -> {
-            T r = db.findById(entityType, id);
+            KAEntity r = db.findById(entityType, id);
             if (r == null) {
                 return;
             }
@@ -39,14 +43,14 @@ public class LocalKeepaliveManager implements KeepaliveManager {
     }
 
     @Override
-    public <T extends KAEntity> Keepalive newKeepalive(KeepaliveKind kind, T entity, long maxMissDuration) {
+    public Keepalive newKeepalive(KeepaliveKind kind, Region region, long id, long maxMissDuration) {
         switch (kind) {
             case TCP:
-                return new TcpKeepalive(this, entity, maxMissDuration);
+                return new TcpKeepalive(this, region, id, maxMissDuration);
             case WEB_SOCKET:
-                return new WebSocketKeepalive(this, entity, maxMissDuration);
+                return new WebSocketKeepalive(this, region, id, maxMissDuration);
             default:
-                return new HttpPassiveKeepalive(this, entity, maxMissDuration);
+                return new HttpPassiveKeepalive(this, region, id, maxMissDuration);
         }
     }
 }

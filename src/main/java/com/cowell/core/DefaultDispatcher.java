@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.rx.core.Extends.*;
 
-@SuppressWarnings(Constants.NON_UNCHECKED)
 @Slf4j
 @RequiredArgsConstructor
 public class DefaultDispatcher<T extends QueueElement> extends Disposable implements Dispatcher<T>, EventTarget<DefaultDispatcher<T>> {
@@ -77,16 +76,14 @@ public class DefaultDispatcher<T extends QueueElement> extends Disposable implem
     @Override
     public void dispatch(T element) {
         DispatchContext.set(this);
-//        DispatchContext.current().setEntityType(element.getClass());
-        Class entityType = element.getClass();
-        if (!keepaliveManager.isValid(entityType, element.getId())) {
+        if (!keepaliveManager.isValid(KeepaliveManager.Region.ELEMENT, element.getId())) {
+            log.debug("element invalid: {}", element);
             try {
-                FluentWait.newInstance(maxWaitInvalidMillis).until(s -> keepaliveManager.isValid(entityType, element.getId()));
+                FluentWait.newInstance(maxWaitInvalidMillis).until(s -> keepaliveManager.isValid(KeepaliveManager.Region.ELEMENT, element.getId()));
             } catch (TimeoutException e) {
                 AtomicLong sum = new AtomicLong();
                 Tasks.timer().setTimeout(() -> {
-//                    DispatchContext.set(this).setEntityType(element.getClass());
-                    if (!keepaliveManager.isValid(entityType, element.getId())) {
+                    if (!keepaliveManager.isValid(KeepaliveManager.Region.ELEMENT, element.getId())) {
                         return true;
                     }
                     queue.offer(element, putFirstOnReValid);

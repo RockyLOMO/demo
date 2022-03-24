@@ -3,6 +3,7 @@ package com.cowell.service.consumer;
 import com.cowell.core.*;
 import com.cowell.core.Queue;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.rx.bean.DateTime;
 import org.rx.core.Constants;
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.rx.core.Extends.*;
 
+@Slf4j
 @SuppressWarnings(Constants.NON_UNCHECKED)
 public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
     final String groupId;
@@ -148,6 +150,7 @@ public class LocalGroup<T extends QueueElement> implements ConsumerGroup<T> {
     public Consumer<T> next() {
         List<ConsumerEntity<T>> r = db.findBy(query().ge(ConsumerEntity::getTtl, System.currentTimeMillis())
                 .eq(ConsumerEntity::isSuspend, false).orderByDescending(ConsumerEntity::getQueueSize).limit(1));
+        log.debug("next: {}", r.size());
         if (CollectionUtils.isEmpty(r)) {
             return null;
         }
