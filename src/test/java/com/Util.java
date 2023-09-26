@@ -1,14 +1,13 @@
 package com;
 
-import com.cowell.config.Consts;
-import com.cowell.service.biz.Doctor;
-import com.cowell.service.consumer.LocalGroup;
-import com.cowell.service.biz.Patient;
-import com.cowell.core.*;
-import com.cowell.service.keepalive.LocalKeepaliveManager;
-import com.cowell.service.queue.LocalQueue;
+import org.rx.demo.gjmq.config.Consts;
+import org.rx.demo.gjmq.core.*;
+import org.rx.demo.gjmq.service.biz.Doctor;
+import org.rx.demo.gjmq.service.consumer.LocalGroup;
+import org.rx.demo.gjmq.service.biz.Patient;
+import org.rx.demo.gjmq.service.keepalive.LocalKeepaliveManager;
+import org.rx.demo.gjmq.service.queue.LocalQueue;
 import org.rx.core.Arrays;
-import org.rx.core.Tasks;
 
 import java.util.ArrayList;
 import java.util.List;

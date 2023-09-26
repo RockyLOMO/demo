@@ -1,4 +1,9 @@
 app:
+  biz:
+    - name: 默认流程
+      actions:
+        - Method: org.rx.demo.gjprescription.service.biz.action.PatientAction.inquiry
+
   nameserver:
     - ns.f-li.cn:853
   processor:

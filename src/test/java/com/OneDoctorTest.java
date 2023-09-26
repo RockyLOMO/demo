@@ -1,17 +1,16 @@
 package com;
 
-import com.cowell.core.DefaultDispatcher;
-import com.cowell.core.SelectStrategy;
-import com.cowell.service.biz.DefaultHandler;
-import com.cowell.service.biz.Doctor;
-import com.cowell.service.biz.Patient;
-import com.cowell.service.keepalive.LocalKeepaliveManager;
-import com.cowell.service.lock.LocalLock;
+import org.rx.core.Linq;
+import org.rx.demo.gjmq.core.DefaultDispatcher;
+import org.rx.demo.gjmq.core.SelectStrategy;
+import org.rx.demo.gjmq.service.biz.DefaultHandler;
+import org.rx.demo.gjmq.service.biz.Doctor;
+import org.rx.demo.gjmq.service.biz.Patient;
+import org.rx.demo.gjmq.service.lock.LocalLock;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.rx.core.Arrays;
-import org.rx.core.NQuery;
 
 @Slf4j
 public class OneDoctorTest {
@@ -49,8 +48,8 @@ public class OneDoctorTest {
 //        handler.suspend(doctor.getId());  //医生暂停接诊
         dispatcher.renewConsumerTtl(doctor.getId());
 
-        assert NQuery.of(Util.doctors.get(0).getTags()).intersection(Arrays.toList(Util.tags[2])).count() == 0;
-        assert NQuery.of(Util.doctors.get(3).getTags()).intersection(Arrays.toList(Util.tags[2])).count() == 1;
+        assert Linq.from(Util.doctors.get(0).getTags()).intersection(Arrays.toList(Util.tags[2])).count() == 0;
+        assert Linq.from(Util.doctors.get(3).getTags()).intersection(Arrays.toList(Util.tags[2])).count() == 1;
 
         dispatcher.startAsync();
         wait();
