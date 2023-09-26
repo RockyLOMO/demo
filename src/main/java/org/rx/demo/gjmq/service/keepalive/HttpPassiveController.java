@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class HttpPassiveController {
-    final KeepaliveManager manager;
+//    final KeepaliveManager manager;
 
     @SneakyThrows
     @RequestMapping("/_ack")
@@ -21,6 +21,6 @@ public class HttpPassiveController {
         if (maxMissDuration == null) {
             maxMissDuration = Consts.DEFAULT_MISS_DURATION;
         }
-        manager.receiveAck(KeepaliveManager.Region.valueOf(region), id, maxMissDuration);
+//        manager.receiveAck(KeepaliveManager.Region.valueOf(region), id, maxMissDuration);
     }
 }

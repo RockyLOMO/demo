@@ -1,4 +1,4 @@
-package com;
+package org.rx.demo.gjmq;
 
 import org.rx.core.Linq;
 import org.rx.demo.gjmq.core.DefaultDispatcher;

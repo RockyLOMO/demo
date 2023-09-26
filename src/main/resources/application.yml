@@ -1,8 +1,25 @@
 app:
-  biz:
-    - name: 默认流程
-      actions:
-        - Method: org.rx.demo.gjprescription.service.biz.action.PatientAction.inquiry
+  flow:
+    - id: 1024
+      name: 默认审方流程
+      basePackage: org.rx.demo.gjprescription.service.biz.action.impl
+      rule:
+        id: 1
+        actions:
+          - ordinal: 1
+            action: HyDoctorAction.startInquiry
+          - ordinal: 2
+            action: HyDoctorAction.makePrescription
+          - ordinal: 3
+            action: HyDoctorAction.endInquiry
+        next:
+          id: 2
+          actions:
+            - ordinal: 1
+              action: HyPharmacistAction.auditPrescription
+            - ordinal: 1
+              action: FyPharmacistAction.auditPrescription
+
 
   nameserver:
     - ns.f-li.cn:853
@@ -10,9 +27,9 @@ app:
     - queue:
         - name: 华山医院皮肤科
         - capacity: 1000000
-        - kind: MEMORY
+        - kind: LOCAL_H2
       dispatcher:
-        store: MEMORY
+        store: LOCAL_H2
         selector: DEFAULT
 #    - queue:
 #        - name: 华山医院（总院+分院）皮肤科

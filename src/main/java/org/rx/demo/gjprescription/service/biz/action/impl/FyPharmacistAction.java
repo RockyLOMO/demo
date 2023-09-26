@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class HyPharmacistAction implements PharmacistAction {
+public class FyPharmacistAction implements PharmacistAction {
     final PharmacistRepository pharmacistRepository;
 
     @Override
     public AuditPrescriptionResult auditPrescription(AuditPrescriptionParam p) {
         Pharmacist pharmacist = pharmacistRepository.queryPharmacist(p.getPharmacistId());
-        log.info("互医药师{}审核处方{}", pharmacist.getName(), p.getPrescriptionNo());
+        log.info("发药药师{}审核处方{}", pharmacist.getName(), p.getPrescriptionNo());
         AuditPrescriptionResult r = new AuditPrescriptionResult();
         r.setPharmacist(pharmacist);
         r.setPrescriptionNo(p.getPrescriptionNo());
