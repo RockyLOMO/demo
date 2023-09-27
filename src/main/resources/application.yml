@@ -3,22 +3,21 @@ app:
     - id: 1024
       name: 默认审方流程
       basePackage: org.rx.demo.gjprescription.service.biz.action.impl
-      rule:
-        id: 1
-        actions:
-          - ordinal: 1
-            action: HyDoctorAction.startInquiry
-          - ordinal: 2
-            action: HyDoctorAction.makePrescription
-          - ordinal: 3
-            action: HyDoctorAction.endInquiry
-        next:
-          id: 2
+      rules:
+        - id: 1
           actions:
             - ordinal: 1
-              action: HyPharmacistAction.auditPrescription
+              method: HyDoctorAction.startInquiry
+            - ordinal: 2
+              method: HyDoctorAction.makePrescription
+            - ordinal: 3
+              method: HyDoctorAction.endInquiry
+        - id: 2
+          actions:
             - ordinal: 1
-              action: FyPharmacistAction.auditPrescription
+              method: HyPharmacistAction.auditPrescription
+            - ordinal: 1
+              method: FyPharmacistAction.auditPrescription
 
 
   nameserver:
