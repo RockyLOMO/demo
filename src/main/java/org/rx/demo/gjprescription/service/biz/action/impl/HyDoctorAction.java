@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.rx.annotation.EnableTrace;
 import org.rx.demo.gjprescription.service.biz.action.DoctorAction;
-import org.rx.demo.gjprescription.service.biz.action.dto.*;
+import org.rx.demo.gjprescription.service.biz.model.*;
 import org.rx.demo.gjprescription.service.biz.repository.PrescriptionRepository;
 import org.rx.demo.gjprescription.service.biz.repository.UserRepository;
 import org.rx.demo.gjprescription.service.biz.repository.InquiryRepository;
@@ -14,7 +14,7 @@ import org.rx.exception.InvalidException;
 import org.rx.util.Snowflake;
 import org.springframework.stereotype.Component;
 
-@EnableTrace(doValidate = true)
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

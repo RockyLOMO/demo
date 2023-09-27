@@ -1,4 +1,4 @@
-package org.rx.demo.gjprescription.service.biz.action.dto;
+package org.rx.demo.gjprescription.service.biz.model;
 
 import lombok.Data;
 

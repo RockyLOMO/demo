@@ -1,7 +1,7 @@
 package org.rx.demo.gjprescription.service.biz.repository.impl;
 
 import org.rx.annotation.EnableTrace;
-import org.rx.demo.gjprescription.service.biz.action.dto.StartInquiryResult;
+import org.rx.demo.gjprescription.service.biz.model.StartInquiryResult;
 import org.rx.demo.gjprescription.service.biz.repository.InquiryRepository;
 import org.rx.util.Snowflake;
 import org.springframework.stereotype.Component;

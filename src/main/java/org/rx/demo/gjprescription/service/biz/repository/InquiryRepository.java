@@ -1,6 +1,6 @@
 package org.rx.demo.gjprescription.service.biz.repository;
 
-import org.rx.demo.gjprescription.service.biz.action.dto.StartInquiryResult;
+import org.rx.demo.gjprescription.service.biz.model.StartInquiryResult;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;

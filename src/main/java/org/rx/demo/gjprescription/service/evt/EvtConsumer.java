@@ -3,7 +3,7 @@ package org.rx.demo.gjprescription.service.evt;
 import lombok.extern.slf4j.Slf4j;
 import org.rx.annotation.Subscribe;
 import org.rx.core.EventBus;
-import org.rx.demo.gjprescription.service.biz.action.dto.StartInquiryResult;
+import org.rx.demo.gjprescription.service.biz.model.StartInquiryResult;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;

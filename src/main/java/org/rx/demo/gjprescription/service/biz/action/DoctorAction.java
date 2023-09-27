@@ -1,10 +1,12 @@
 package org.rx.demo.gjprescription.service.biz.action;
 
-import org.rx.demo.gjprescription.service.biz.action.dto.*;
+import org.rx.annotation.EnableTrace;
+import org.rx.demo.gjprescription.service.biz.model.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+@EnableTrace(doValidate = true)
 public interface DoctorAction extends Stage {
     @Override
     default StageType getType() {

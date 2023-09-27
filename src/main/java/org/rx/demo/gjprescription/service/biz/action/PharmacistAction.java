@@ -1,7 +1,7 @@
 package org.rx.demo.gjprescription.service.biz.action;
 
-import org.rx.demo.gjprescription.service.biz.action.dto.AuditPrescriptionParam;
-import org.rx.demo.gjprescription.service.biz.action.dto.AuditPrescriptionResult;
+import org.rx.demo.gjprescription.service.biz.model.AuditPrescriptionParam;
+import org.rx.demo.gjprescription.service.biz.model.AuditPrescriptionResult;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;

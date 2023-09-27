@@ -1,4 +1,4 @@
-package org.rx.demo.gjprescription.service.biz.action.dto;
+package org.rx.demo.gjprescription.service.biz.model;
 
 import lombok.Data;
 import org.rx.demo.gjprescription.service.biz.model.PrescriptionEntity;
@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
-public class MakePrescriptionResult {
+public class EndInquiryResult {
     @NotNull
     String inquiryId;
     @NotNull
