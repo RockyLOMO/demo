@@ -1,6 +1,7 @@
 app:
   flow:
     - id: 1024
+#      ruleExpr: ${in.storeid=[xx]}
       name: 默认审方流程
       basePackage: org.rx.demo.gjprescription.service.biz.action.impl
       rules:

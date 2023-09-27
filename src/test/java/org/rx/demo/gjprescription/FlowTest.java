@@ -2,7 +2,6 @@ package org.rx.demo.gjprescription;
 
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
-import org.rx.demo.gjprescription.service.biz.action.impl.HyDoctorAction;
 import org.rx.demo.gjprescription.service.biz.model.MakePrescriptionParam;
 import org.rx.demo.gjprescription.service.biz.model.PrescriptionEntity;
 import org.rx.demo.gjprescription.service.biz.model.StartInquiryParam;
@@ -10,7 +9,6 @@ import org.rx.demo.gjprescription.service.biz.model.StartInquiryResult;
 import org.rx.demo.gjprescription.service.flow.FlowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.annotation.AnnotationUtils;
 
 @SpringBootTest
 public class FlowTest {
