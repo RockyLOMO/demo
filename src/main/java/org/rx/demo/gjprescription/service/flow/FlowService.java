@@ -8,7 +8,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.rx.annotation.EnableTrace;
 import org.rx.core.*;
 import org.rx.demo.gjprescription.service.flow.conf.Flow;
-import org.rx.demo.gjprescription.service.flow.conf.FlowRule;
+import org.rx.demo.gjprescription.service.flow.conf.FlowStage;
 import org.rx.demo.gjprescription.service.flow.conf.RuleAction;
 import org.rx.exception.InvalidException;
 import org.rx.spring.SpringContext;
@@ -75,8 +75,8 @@ public class FlowService {
         if (!p.isEmpty()) {
             p += s;
         }
-        for (FlowRule rule : flow.getRules()) {
-            for (RuleAction action : rule.getActions()) {
+        for (FlowStage rule : flow.getStages()) {
+            for (RuleAction action : rule.getRules()) {
                 String cm = action.getMethod();
                 int i = cm.lastIndexOf(s);
                 if (i == -1) {
@@ -119,11 +119,11 @@ public class FlowService {
             Validator.validateBean(flow);
 
             rIds.clear();
-            for (FlowRule rule : flow.getRules()) {
+            for (FlowStage rule : flow.getStages()) {
                 if (!rIds.add(rule.getId())) {
                     throw new InvalidException("流程Id{}规则Id{}重复", flow.getId(), rule.getId());
                 }
-                rule.setActions(Linq.from(rule.getActions()).orderBy(RuleAction::getOrdinal).toList());
+                rule.setRules(Linq.from(rule.getRules()).orderBy(RuleAction::getOrdinal).toList());
             }
         }
         log.info("load conf {}", flows);

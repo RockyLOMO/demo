@@ -7,23 +7,23 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
-public class Flow {
+public class FlowStage {
     /**
-     * 流程id
+     * 流程阶段id
      */
     int id;
     /**
-     * 流程名
+     * 流程阶段名
      */
     String name;
     /**
-     * 实现类的package
+     * 阶段范围
      */
-    String basePackage;
+    List<String> scopes;
     /**
-     * 具体阶段
+     * 具体规则
      */
     @NotNull
     @Valid
-    List<FlowStage> stages;
+    List<RuleAction> rules;
 }

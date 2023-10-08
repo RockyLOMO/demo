@@ -1,20 +1,42 @@
 app:
   flow:
     - id: 1024
-#      ruleExpr: ${in.storeid=[xx]}
+#      routeExpr: ${in.storeId} == [xx]
       name: 默认审方流程
       basePackage: org.rx.demo.gjprescription.service.biz.action.impl
-      rules:
+      stages:
         - id: 1
-          actions:
+          name: 问诊阶段
+          scopes:
+            - ${doctorId} + ${patientId}
+            - ${inquiryId}
+          rules:
             - ordinal: 1
               method: HyDoctorAction.startInquiry
             - ordinal: 2
               method: HyDoctorAction.makePrescription
+              events:
+                - ordinal: 1
+                  eventType: Pre/Post
+                  async: true/false
+                  beanType: org.rx.xxx.PostMakePrescriptionEventDto
+                  beanBuilder:
+                    doctorId: ${prev.in.doctorId}
+                    inquiryId: ${in.inquiryId}
+                    prescriptionNo: ${out.prescriptions[0].prescriptionNo}
+                    patientAge: 10
+                    time: ${now}
+                - ordinal: 2
+                  beanType: org.rx.xxx.SendMsgEventDto
+                  beanBuilder:
+                    doctorId: ${prev.in.doctorId}
+                    inquiryId: ${in.inquiryId}
+                    prescriptionNo: ${out.prescriptions[0].prescriptionNo}
             - ordinal: 3
               method: HyDoctorAction.endInquiry
         - id: 2
-          actions:
+          name: 发药阶段
+          rules:
             - ordinal: 1
               method: HyPharmacistAction.auditPrescription
             - ordinal: 1
