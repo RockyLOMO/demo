@@ -1,0 +1,56 @@
+@startuml
+start
+group 初始化
+:服务启动;
+
+if (从数据库读取流程配置?) then (yes)
+    :从数据库读取流程编排配置;
+else (no)
+    :从配置文件读取流程编排配置;
+endif
+
+:校验流程编排配置合法性;
+:校验流程编排配置业务动作合法性;
+if (未校验通过?) then (yes)
+    :提示错误信息;
+    stop
+endif
+
+:流程编排配置写入本地缓存,流程编排服务启动成功;
+end group
+detach
+
+group 运行
+split
+    -[hidden]->
+    :Http接口;
+split again
+    -[hidden]->
+    :业务服务;
+end split
+:调用方包装定义的业务动作DTO;
+
+
+:调用流程编排服务执行;
+:流程编排服务根据路由规则计算对应流程;
+:流程编排服务根据业务动作DTO从缓存拿取对应业务动作的实现对象类别;
+if (未找到流程或未拿到业务动作的实现对象类别?) then (yes)
+    :提示错误信息;
+    stop
+endif
+:通过业务动作的实现对象类别查找实例;
+if (未在spring bean中获取到实例) then (yes)
+    :创建新的对象类别的实例;
+    if (创建实例失败) then (yes)
+        :提示错误信息;
+        stop
+    endif
+endif
+
+:;
+
+:执行业务动作;
+end group
+
+
+@enduml

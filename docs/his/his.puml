@@ -1,0 +1,62 @@
+@startuml
+class EventBus{
+
+}
+EventBus : <T> void register(@NonNull T subscriber) 订阅事件
+EventBus : <T> void unregister(T subscriber) 取消订阅事件
+EventBus : <T> void publish(T event) 发布事件
+
+class FlowService{
+
+}
+FlowService : <TI, TO> TO proceed(int flowId, @NotNull TI in) 执行流程
+FlowService : void reload() 重新加载配置
+FlowService : List<Flow> readConfig() 读取配置
+
+interface ActionInterceptor{
+
+}
+ActionInterceptor : <T> T doAround(ActionJoinPoint joinPoint) throws Throwable 切入点
+protocol ActionJoinPoint{
+    * target : Object 实例
+    * dto : Object 动作DTO
+    * signature : 动作方法
+}
+ActionJoinPoint : <T> T proceed() 执行动作
+
+entity Flow {
+    * id : int 流程id
+    * name : String 流程名
+    * routeExpr: String 路由规则
+    * basePackage : String 实现类的package
+    * stages : List<FlowStage> 具体阶段
+}
+
+entity FlowStage {
+    * id : int 流程阶段id
+    * name : String 流程阶段名
+    * basePackage : String 实现类的package
+    * scopes : List<String> 阶段范围
+    * interceptors : List<Class<? extends ActionInterceptor>> 动作拦截器
+    * rules : List<RuleAction> 具体规则
+}
+
+entity RuleAction{
+    * ordinal: int 排序
+    * method: String 动作实现方法全路径名
+    * events: List<ActionEvent> 事件定义
+}
+
+entity ActionEvent{
+    * ordinal: int 排序
+    * type: enum Pre在动作之前触发，Post在动作之后触发
+    * async: bool true异步事件；false同步事件，同步事件中任一一个订阅者可中断当前执行
+    * beanType: String 事件DTO的Type，支持嵌套泛型
+    * beanBuilder: Map<String, String> 组成事件DTO
+}
+
+Flow }o-- FlowStage
+FlowStage }o-- RuleAction
+RuleAction }o-- ActionEvent
+FlowStage }o-- ActionInterceptor
+@enduml

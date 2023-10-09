@@ -12,17 +12,20 @@ import org.rx.demo.gjprescription.service.biz.user.Doctor;
 import org.rx.demo.gjprescription.service.biz.user.Patient;
 import org.rx.exception.InvalidException;
 import org.rx.util.Snowflake;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+//@Scope
 public class HyDoctorAction implements DoctorAction {
     final UserRepository userRepository;
     final InquiryRepository inquiryRepository;
     final PrescriptionRepository prescriptionRepository;
 
+//    @Transaction
     @Override
     public StartInquiryResult startInquiry(StartInquiryParam p) {
         Doctor doctor = userRepository.queryDoctor(p.getDoctorId());

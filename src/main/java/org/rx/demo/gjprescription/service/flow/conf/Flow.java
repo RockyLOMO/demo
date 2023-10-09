@@ -17,6 +17,10 @@ public class Flow {
      */
     String name;
     /**
+     * 路由规则
+     */
+    String routeExpr;
+    /**
      * 实现类的package
      */
     String basePackage;

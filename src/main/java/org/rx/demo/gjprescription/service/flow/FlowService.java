@@ -44,6 +44,15 @@ public class FlowService {
         return proceed(flowId, in, in.getClass());
     }
 
+    /**
+     * 执行流程
+     * @param flowId
+     * @param in
+     * @param inType
+     * @return
+     * @param <TI>
+     * @param <TO>
+     */
     @SneakyThrows
     public <TI, TO> TO proceed(int flowId, @NotNull TI in, @NotNull Type inType) {
         FlowInfo f = _flows.get(flowId);
@@ -60,6 +69,9 @@ public class FlowService {
         return r;
     }
 
+    /**
+     * 重新加载配置
+     */
     @PostConstruct
     public synchronized void reload() {
         ConcurrentHashMap<Integer, FlowInfo> t = new ConcurrentHashMap<>(Linq.from(readConfig()).toMap(Flow::getId, FlowInfo::new));
@@ -105,6 +117,10 @@ public class FlowService {
         }
     }
 
+    /**
+     * 读取配置
+     * @return
+     */
     public List<Flow> readConfig() {
         List<Flow> flows = YamlConfiguration.RX_CONF.readAs("app.flow", new TypeReference<List<Flow>>() {
         }.getType());

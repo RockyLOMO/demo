@@ -1,8 +1,8 @@
 app:
   flow:
     - id: 1024
-#      routeExpr: ${in.storeId} == [xx]
       name: 默认审方流程
+      routeExpr: ${in.storeId} == [xx]
       basePackage: org.rx.demo.gjprescription.service.biz.action.impl
       stages:
         - id: 1
@@ -10,6 +10,8 @@ app:
           scopes:
             - ${doctorId} + ${patientId}
             - ${inquiryId}
+          interceptors:
+            - org.rx.xxx.xxActionAop
           rules:
             - ordinal: 1
               method: HyDoctorAction.startInquiry
@@ -17,7 +19,7 @@ app:
               method: HyDoctorAction.makePrescription
               events:
                 - ordinal: 1
-                  eventType: Pre/Post
+                  type: Pre/Post
                   async: true/false
                   beanType: org.rx.xxx.PostMakePrescriptionEventDto
                   beanBuilder:
@@ -60,3 +62,4 @@ app:
 #      dispatcher:
 #        store: SHARDING_H2
 #        selector: DEFAULT
+---
