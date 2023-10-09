@@ -14,11 +14,12 @@ endif
 if (未校验通过?) then (yes)
     :提示错误信息;
     stop
+else (no)
+    :流程编排配置写入本地缓存,流程编排服务启动成功;
+    detach
 endif
-
-:流程编排配置写入本地缓存,流程编排服务启动成功;
 end group
-detach
+
 
 group 运行
 split
@@ -37,20 +38,61 @@ end split
 if (未找到流程或未拿到业务动作的实现对象类别?) then (yes)
     :提示错误信息;
     stop
-endif
-:通过业务动作的实现对象类别查找实例;
-if (未在spring bean中获取到实例) then (yes)
-    :创建新的对象类别的实例;
-    if (创建实例失败) then (yes)
+else (no)
+
+    :通过业务动作的实现对象类别查找实例;
+    if (未在spring bean中获取到实例?) then (yes)
+        :创建新的对象类别的实例;
+        if (创建实例失败?) then (yes)
+            :提示错误信息;
+            stop
+        else (no)
+        endif
+    else (no)
+    endif
+
+    :流程编排服务校验流程执行节点合法性;
+    if (执行节点非法?) then (yes)
         :提示错误信息;
         stop
+    else (no)
     endif
+
+    :执行动作拦截器;
+    if (执行动作拦截器异常?) then (yes)
+        :提示错误信息;
+        stop
+    else (no)
+    endif
+
+    :发布动作前置同步事件;
+    if (事件订阅者显示中断动作执行?) then (yes)
+        :提示中断信息;
+        stop
+    else (no)
+    endif
+    :发布动作前置异步事件;
+
+    :执行业务动作;
+    if (执行动作异常?) then (yes)
+        :提示错误信息;
+        stop
+    else (no)
+    endif
+
+    :发布动作后置同步事件;
+    if (事件订阅者显示中断动作执行?) then (yes)
+        :提示中断信息;
+        stop
+    else (no)
+    endif
+    :发布动作后置异步事件;
+
+    :流程编排服务记录当前流程执行节点及状态;
+    :动作执行成功返回结果;
+
 endif
-
-:;
-
-:执行业务动作;
 end group
-
+stop
 
 @enduml

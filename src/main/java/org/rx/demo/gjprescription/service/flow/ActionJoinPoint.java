@@ -17,14 +17,14 @@ public class ActionJoinPoint {
     /**
      * 动作DTO
      */
-    final Object dto;
+    final Object param;
     /**
      * 动作方法
      */
     final Method signature;
 
     public <T> T proceed() {
-        return proceed(dto);
+        return proceed(param);
     }
 
     /**
@@ -36,8 +36,9 @@ public class ActionJoinPoint {
      */
     @SneakyThrows
     public <T> T proceed(@NonNull Object dto) {
-        if (!this.dto.getClass().isInstance(dto)) {
-            throw new InvalidException("入参类型{}与原类型{}不匹配", dto.getClass(), this.dto.getClass());
+        //todo thread local ctx result
+        if (!this.param.getClass().isInstance(dto)) {
+            throw new InvalidException("入参类型{}与原类型{}不匹配", dto.getClass(), this.param.getClass());
         }
         return (T) signature.invoke(target, new Object[]{dto});
     }

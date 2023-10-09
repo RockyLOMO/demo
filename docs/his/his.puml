@@ -19,10 +19,13 @@ interface ActionInterceptor{
 ActionInterceptor : <T> T doAround(ActionJoinPoint joinPoint) throws Throwable 切入点
 protocol ActionJoinPoint{
     * target : Object 实例
-    * dto : Object 动作DTO
+    * param : Object 动作DTO
     * signature : 动作方法
 }
 ActionJoinPoint : <T> T proceed() 执行动作
+protocol InterruptFlowException{
+    * flowId : int 流程id
+}
 
 entity Flow {
     * id : int 流程id
