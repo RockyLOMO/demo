@@ -27,6 +27,9 @@ split
     :Http接口;
 split again
     -[hidden]->
+    :MQ消费;
+split again
+    -[hidden]->
     :业务服务;
 end split
 :调用方包装定义的业务动作DTO;
